@@ -1,0 +1,27 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const blogEntries = await getCollection('blog');
+  return blogEntries.map((entry: any) => ({
+    params: { slug: entry.id }, props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+<BaseLayout title={entry.data.title} description={entry.data.description}>
+  <article class="max-w-3xl mx-auto py-10 prose prose-slate dark:prose-invert prose-headings:font-outfit lg:prose-xl">
+    <div class="mb-10 text-center">
+      <h1 class="text-4xl sm:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">{entry.data.title}</h1>
+      <p class="text-slate-500 font-mono">
+        Published on {entry.data.publishDate.toISOString().split('T')[0]} • By {entry.data.author}
+      </p>
+    </div>
+    <div class="glass-card p-8 sm:p-12 rounded-3xl mt-8">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
