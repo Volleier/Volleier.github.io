@@ -3,6 +3,8 @@
 ---
 
 <canvas id="fluid-canvas" class="fluid-background"></canvas>
+<!-- 暗色遮罩层，用来压暗背景以突出上层内容 -->
+<div class="fluid-overlay"></div>
 
 <style>
   .fluid-background {
@@ -11,9 +13,31 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    z-index: -1;
+    z-index: -2;
     pointer-events: none;
     background-color: #001217;
+  }
+  .fluid-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.85); /* 修复被误改的属性名，使压暗生效 */
+  }
+  
+  /* 添加表面噪点颗粒 (Film Grain/Noise) */
+  .fluid-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    /* 使用黑白相间的无色噪波，避免彩色雪花点 */
+    background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/%3E%3CfeColorMatrix type="saturate" values="0" /%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+    opacity: 0.05; /* 将透明度降低，让颗粒呈现“隐约可见”的高级感 */
+    mix-blend-mode: overlay;
   }
 </style>
 
@@ -141,10 +165,10 @@
           
           float f = fbm( vec3(p + 1.2 * r, t) );
           
-          // 基础色调
-          vec3 colorTeal = vec3(0.01, 0.45, 0.50);
-          vec3 colorDeep = vec3(0.01, 0.1, 0.16);
-          vec3 colorLight = vec3(0.2, 0.75, 0.85);
+          // 基础色调 (已降低饱和度，显得更加高级内敛)
+          vec3 colorTeal = vec3(0.15, 0.35, 0.40);
+          vec3 colorDeep = vec3(0.05, 0.08, 0.12);
+          vec3 colorLight = vec3(0.35, 0.65, 0.95);
           
           // 混合背景颜色
           vec3 bgCol = mix(colorDeep, colorTeal, clamp((f + 1.0) * 0.5, 0.0, 1.0));
@@ -161,7 +185,8 @@
           
           // 移除所有 speckles （噪点碎斑），让画面纯粹如水和漆
           
-          vec3 colorPink = vec3(1.0, 0.4, 0.75);
+          // 粉金色彩 (降低饱和度，变为带有灰调的玫瑰金/淡粉金)
+          vec3 colorPink = vec3(0.85, 0.55, 0.70);
           
           // 自然断开某些线条，使得它不是铺满全屏，而是优雅的走向
           float veinFlowMask = clamp(fbm(vec3(p * 2.0 - r, t)) + 0.4, 0.0, 1.0);

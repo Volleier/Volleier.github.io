@@ -6,5 +6,12 @@ import FluidBackground from '../components/FluidBackground.astro';
   <!-- 背景特效 -->
   <FluidBackground />
   
-  <!-- 界面文字暂时隐藏，集中展示流体效果 -->
+  <!-- 界面主要内容层 -->
+  <main class="relative z-10 min-h-screen flex items-center justify-center pointer-events-none">
+    <div class="pointer-events-auto">
+      <!-- 默认展示素材文件夹中的图片 -->
+      <img src="/assets/PengLaiSiShaoXiao.png" alt="PengLaiSiShaoXiao Header Image" >
+    </div>
+  </main>
 </BaseLayout>
+

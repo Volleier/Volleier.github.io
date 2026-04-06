@@ -24,3 +24,6 @@ Thumbs.db
 build.log
 build_output.log
 build_error.txt
+
+# local assets
+Asset/
