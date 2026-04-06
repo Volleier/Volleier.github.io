@@ -1,0 +1,288 @@
+---
+// src/components/FluidBackground.astro
+---
+
+<canvas id="fluid-canvas" class="fluid-background"></canvas>
+
+<style>
+  .fluid-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    background-color: #001217;
+  }
+</style>
+
+<script>
+  // WebGL implementation enclosed to run purely on client
+  function initWebGL() {
+    const canvas = document.getElementById('fluid-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) {
+      console.error('WebGL not supported');
+      return;
+    }
+
+    const vsSource = `
+      attribute vec2 a_position;
+      void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+      }
+    `;
+
+    const fsSource = `
+      precision highp float;
+      uniform vec2 u_resolution;
+      uniform float u_time;
+
+      // Simplex 3D Noise by Ian McEwan, Ashima Arts
+      vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+      vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+      vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
+
+      float snoise(vec3 v) {
+        const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+        const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+        vec3 i  = floor(v + dot(v, C.yyy) );
+        vec3 x0 = v - i + dot(i, C.xxx) ;
+
+        vec3 g = step(x0.yzx, x0.xyz);
+        vec3 l = 1.0 - g;
+        vec3 i1 = min( g.xyz, l.zxy );
+        vec3 i2 = max( g.xyz, l.zxy );
+
+        vec3 x1 = x0 - i1 + C.xxx;
+        vec3 x2 = x0 - i2 + C.yyy;
+        vec3 x3 = x0 - D.yyy;
+
+        i = mod289(i);
+        vec4 p = permute( permute( permute(
+                   i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                 + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                 + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+        float n_ = 0.142857142857;
+        vec3  ns = n_ * D.wyz - D.xzx;
+
+        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+
+        vec4 x_ = floor(j * ns.z);
+        vec4 y_ = floor(j - 7.0 * x_ );
+
+        vec4 x = x_ *ns.x + ns.yyyy;
+        vec4 y = y_ *ns.x + ns.yyyy;
+        vec4 h = 1.0 - abs(x) - abs(y);
+
+        vec4 b0 = vec4( x.xy, y.xy );
+        vec4 b1 = vec4( x.zw, y.zw );
+
+        vec4 s0 = floor(b0)*2.0 + 1.0;
+        vec4 s1 = floor(b1)*2.0 + 1.0;
+        vec4 sh = -step(h, vec4(0.0));
+
+        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+        vec3 p0 = vec3(a0.xy,h.x);
+        vec3 p1 = vec3(a0.zw,h.y);
+        vec3 p2 = vec3(a1.xy,h.z);
+        vec3 p3 = vec3(a1.zw,h.w);
+
+        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+        p0 *= norm.x;
+        p1 *= norm.y;
+        p2 *= norm.z;
+        p3 *= norm.w;
+
+        vec4 m = max(0.5 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+        m = m * m;
+        return 105.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1),
+                                      dot(p2,x2), dot(p3,x3) ) );
+      }
+
+      float fbm(vec3 x) {
+          float v = 0.0;
+          float a = 0.5;
+          vec3 shift = vec3(100.0);
+          // 极大减少迭代次数，摒弃细碎的高频噪点，只保留大波纹
+          for (int i = 0; i < 4; ++i) { 
+              v += a * snoise(x);
+              x = x * 2.0 + shift;
+              a *= 0.4; // 降低高频波形的振幅权重
+          }
+          return v;
+      }
+
+      void main() {
+          // Normalize pixel coordinates
+          vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / min(u_resolution.y, u_resolution.x);
+          
+          float t = u_time * 0.015; // 更慢的流速
+          
+          // 极度放大画面 (极大降低 UV 的倍数，比如 0.3)
+          vec2 p = uv * 0.4; 
+          
+          // 柔和的 Domain warping，减少因位移导致的画面扭曲重叠
+          vec2 q = vec2(0.);
+          q.x = fbm( vec3(p, t) );
+          q.y = fbm( vec3(p + vec2(1.0), t) );
+          
+          vec2 r = vec2(0.);
+          r.x = fbm( vec3(p + 1.2 * q + vec2(1.7, 9.2), t) );
+          r.y = fbm( vec3(p + 1.2 * q + vec2(8.3, 2.8), t) );
+          
+          float f = fbm( vec3(p + 1.2 * r, t) );
+          
+          // 基础色调
+          vec3 colorTeal = vec3(0.01, 0.45, 0.50);
+          vec3 colorDeep = vec3(0.01, 0.1, 0.16);
+          vec3 colorLight = vec3(0.2, 0.75, 0.85);
+          
+          // 混合背景颜色
+          vec3 bgCol = mix(colorDeep, colorTeal, clamp((f + 1.0) * 0.5, 0.0, 1.0));
+          bgCol = mix(bgCol, colorLight, clamp(r.x * 1.5 - 0.2, 0.0, 1.0));
+          
+          // --- 金属粉色拉丝 ---
+          // 改用极低频、极少叠的平滑 Noise 来生成丝线，彻底抛弃 FBM 造成的毛边
+          float veinNoise = snoise( vec3(p * 2.5 + q * 1.0, t * 1.2) )
+                          + 0.4 * snoise( vec3(p * 5.0 + q * 0.5 + vec2(5.0), t * 1.5) );
+          
+          float ridge = abs(veinNoise);
+          // 生成极其平滑、清晰的边缘带
+          float vein = smoothstep(0.07, 0.0, ridge); 
+          
+          // 移除所有 speckles （噪点碎斑），让画面纯粹如水和漆
+          
+          vec3 colorPink = vec3(1.0, 0.4, 0.75);
+          
+          // 自然断开某些线条，使得它不是铺满全屏，而是优雅的走向
+          float veinFlowMask = clamp(fbm(vec3(p * 2.0 - r, t)) + 0.4, 0.0, 1.0);
+          float pinkMask = clamp(vein * veinFlowMask * 1.5, 0.0, 1.0);
+          
+          // 光照与法线
+          // 放大法线采样的步长，产生无比柔和的大面积漫波反光，而非琐碎亮斑
+          float eps = 0.03; 
+          float fx = fbm(vec3(p + vec2(eps, 0.0) + r, t));
+          float fy = fbm(vec3(p + vec2(0.0, eps) + r, t));
+          vec3 normal = normalize(vec3(f - fx, f - fy, eps * 6.0));
+          
+          vec3 lightDir = normalize(vec3(1.0, 1.0, 2.0));
+          float diffuse = max(dot(normal, lightDir), 0.0);
+          vec3 viewDir = vec3(0.0, 0.0, 1.0);
+          vec3 reflectDir = reflect(-lightDir, normal);
+          
+          // 柔丝缎背景反光
+          float spec = pow(max(dot(viewDir, reflectDir), 0.0), 20.0);
+          
+          // 金属镜面反光
+          float metalSpec = pow(max(dot(viewDir, reflectDir), 0.0), 60.0); 
+          
+          // 最终合成
+          vec3 finalColor = bgCol * (diffuse * 0.65 + 0.35); 
+          finalColor += spec * colorLight * 0.5; // 大面积柔和高光
+          
+          // 叠加细密平滑的粉色高光金属线
+          vec3 pinkVeinColor = colorPink * (0.8 + metalSpec * 2.5);
+          finalColor = mix(finalColor, pinkVeinColor, pinkMask);
+          
+          // 仅在粉色金属线上追加极其耀眼的聚焦点
+          finalColor += metalSpec * pinkMask * vec3(1.0, 0.9, 0.95);
+          
+          gl_FragColor = vec4(finalColor, 1.0);
+      }
+    `;
+
+    function createShader(gl: WebGLRenderingContext, type: number, source: string) {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        console.error('Shader validation error:', gl.getShaderInfoLog(shader));
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
+    }
+
+    const vertexShader = createShader(gl, gl.VERTEX_SHADER, vsSource);
+    const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+    if (!vertexShader || !fragmentShader) return;
+
+    const program = gl.createProgram();
+    if (!program) return;
+    
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error('Program link error:', gl.getProgramInfoLog(program));
+      return;
+    }
+
+    const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    // Two triangles to cover the screen
+    const positions = [
+      -1, -1,
+       1, -1,
+      -1,  1,
+      -1,  1,
+       1, -1,
+       1,  1,
+    ];
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+    const timeLocation = gl.getUniformLocation(program, "u_time");
+    const resolutionLocation = gl.getUniformLocation(program, "u_resolution");
+
+    function resizeCanvasToDisplaySize() {
+      const displayWidth  = window.innerWidth;
+      const displayHeight = window.innerHeight;
+      if (canvas.width  !== displayWidth || canvas.height !== displayHeight) {
+        // High DPI support
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width  = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+        canvas.style.width = displayWidth + 'px';
+        canvas.style.height = displayHeight + 'px';
+      }
+    }
+
+    function render(time: number) {
+      time *= 0.001; // Scale time properly
+
+      resizeCanvasToDisplaySize();
+      gl!.viewport(0, 0, gl!.canvas.width, gl!.canvas.height);
+
+      gl!.useProgram(program);
+
+      gl!.enableVertexAttribArray(positionAttributeLocation);
+      gl!.bindBuffer(gl!.ARRAY_BUFFER, positionBuffer);
+      gl!.vertexAttribPointer(positionAttributeLocation, 2, gl!.FLOAT, false, 0, 0);
+
+      gl!.uniform2f(resolutionLocation, gl!.canvas.width, gl!.canvas.height);
+      gl!.uniform1f(timeLocation, time);
+
+      gl!.drawArrays(gl!.TRIANGLES, 0, 6);
+
+      requestAnimationFrame(render);
+    }
+    
+    // Start animation loop
+    requestAnimationFrame(render);
+  }
+
+  // Ensure it runs once the DOM is fully interactive
+  document.addEventListener("DOMContentLoaded", initWebGL);
+</script>
