@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../components/ui/layout/BaseLayout.astro';
 import FluidBackground from '../components/ui/effects/FluidBackground.astro';
+import Counter from '../components/islands/Counter.jsx';
 ---
 <BaseLayout>
   <!-- 背景特效 -->
@@ -10,6 +11,7 @@ import FluidBackground from '../components/ui/effects/FluidBackground.astro';
   <main class="fixed inset-0 z-10 flex items-center justify-center">
     <div class="glass-card">
       <img src="/assets/PengLaiSiShaoXiao.png" alt="PengLaiSiShaoXiao Header Image" class="logo-img" />
+      <Counter client:idle />
     </div>
   </main>
 </BaseLayout>
