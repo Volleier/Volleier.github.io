@@ -1,0 +1,25 @@
+---
+const { title = 'Volleier', description = '', ogImage = '' } = Astro.props;
+import '../../../styles/global.css';
+import Nav from '../common/Nav.astro';
+import Footer from '../common/Footer.astro';
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{title}</title>
+    {description ? <meta name="description" content={description} /> : null}
+    <meta property="og:title" content={title} />
+    {description ? <meta property="og:description" content={description} /> : null}
+    {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+  </head>
+  <body class="min-h-screen flex flex-col">
+    <Nav />
+    <main class="flex-grow">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
