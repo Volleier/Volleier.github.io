@@ -1,0 +1,17 @@
+---
+import { formatDate } from '../../../domain/shared/date';
+const { entry } = Astro.props;
+---
+
+<aside class="md:w-64 flex-shrink-0 order-2 md:order-1 pt-8">
+  <div class="sticky top-24 glass-card p-6 rounded-2xl">
+    <h3 class="font-outfit font-bold text-lg mb-4 text-indigo-600 dark:text-indigo-400">Wiki Meta</h3>
+    <ul class="text-sm space-y-3 text-slate-600 dark:text-slate-400">
+      <li><strong>Category:</strong> {entry.data.category}</li>
+      <li><strong>Last Updated:</strong> {formatDate(entry.data.lastUpdated)}</li>
+    </ul>
+    <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+      <a href="/wiki" class="text-sm text-blue-500 hover:underline flex items-center">← Back to Wiki Index</a>
+    </div>
+  </div>
+</aside>
