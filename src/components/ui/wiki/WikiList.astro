@@ -1,0 +1,16 @@
+---
+const { pages } = Astro.props;
+---
+
+{pages && pages.length ? (
+  <ul class="space-y-6">
+    {pages.map((p) => (
+      <li>
+        <a href={`/wiki/${p.id}`} class="text-lg font-semibold text-indigo-600 hover:underline">{p.data.title}</a>
+        {p.data.category ? <p class="text-sm text-slate-500 mt-1">{p.data.category}</p> : null}
+      </li>
+    ))}
+  </ul>
+) : (
+  <p>暂无条目。</p>
+)}

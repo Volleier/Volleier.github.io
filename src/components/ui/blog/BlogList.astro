@@ -1,0 +1,16 @@
+---
+const { posts } = Astro.props;
+---
+
+{posts && posts.length ? (
+  <ul class="space-y-6">
+    {posts.map((post) => (
+      <li>
+        <a href={`/blog/${post.id}`} class="text-lg font-semibold text-indigo-600 hover:underline">{post.data.title}</a>
+        {post.data.description ? <p class="text-sm text-slate-500 mt-1">{post.data.description}</p> : null}
+      </li>
+    ))}
+  </ul>
+) : (
+  <p>暂无文章。</p>
+)}
