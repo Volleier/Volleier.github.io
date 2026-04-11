@@ -1,12 +1,10 @@
 ---
-import BaseLayout from '../components/ui/layout/BaseLayout.astro';
-import FluidBackground from '../components/ui/effects/FluidBackground.astro';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import GildedEffect from '../components/ui/effects/GildedEffect.astro';
 import Counter from '../components/islands/Counter.jsx';
 ---
 <BaseLayout>
-  <!-- 背景特效 -->
-  <FluidBackground />
-
+  <GildedEffect />
   <!-- 居中毛玻璃卡片 -->
   <main class="fixed inset-0 z-10 flex items-center justify-center">
     <div class="glass-card">
