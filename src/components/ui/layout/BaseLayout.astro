@@ -3,6 +3,7 @@ const { title = 'Volleier', description = '', ogImage = '' } = Astro.props;
 import '../../../styles/global.css';
 import Nav from '../common/Nav.astro';
 import Footer from '../common/Footer.astro';
+import LoadingScreen from './LoadingScreen.astro';
 ---
 
 <html lang="zh-CN">
@@ -16,6 +17,7 @@ import Footer from '../common/Footer.astro';
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
   </head>
   <body class="min-h-screen flex flex-col">
+    <LoadingScreen />
     <Nav />
     <main class="flex-grow">
       <slot />

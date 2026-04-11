@@ -1,0 +1,261 @@
+---
+/**
+ * LoadingScreen.astro
+ * 
+ * Final high-fidelity loading screen recreation.
+ * Features: Massive 4x Logo, Corrected 5-point complex slant, 3s transition.
+ * Revisions: Extra Large Pink Square (3x jump), Floating Broken Separator Line.
+ */
+---
+
+<div id="loading-screen" class="loading-overlay">
+    <!-- Background Decorative Lines -->
+    <div class="decor-line h-line-top"></div>
+    <div class="decor-line v-line-right"></div>
+    
+    <!-- Status Bar Area (Bottom) -->
+    <div class="status-bar-container">
+        <div class="cyan-bar"></div>
+        <div class="magenta-line"></div>
+    </div>
+
+    <!-- Badge Logo (Massive Scale) -->
+    <div class="badge-container">
+        <img src="/assets/loading/Volleier-Logo.png" alt="Badge Logo" class="badge-img" />
+    </div>
+
+    <!-- Name Block (Top Right - Complex Geometry) -->
+    <div class="name-block-outer">
+        <div class="name-block-container">
+            <div class="accent-squares">
+                <div class="square hollow"></div>
+                <!-- Extra Large Pink Square -->
+                <div class="square solid-magenta large-square"></div>
+            </div>
+            <div class="name-content">
+                <div class="trapezoid-bg"></div>
+                <div class="name-images">
+                    <img src="/assets/loading/PengLaiSiShaoXiao.png" alt="蓬莱寺劭鸮" class="name-zh" />
+                    <!-- Broken White Line -->
+                    <div class="white-separator-container">
+                        <div class="white-separator"></div>
+                    </div>
+                    <img src="/assets/loading/Volleier.png" alt="Volleier" class="name-en" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --color-bg: #2b2b2b;
+        --color-cyan: #00ffcc;
+        --color-magenta: #ff108b;
+        --color-line: rgba(255, 255, 255, 0.2);
+    }
+
+    .loading-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background-color: var(--color-bg);
+        overflow: hidden;
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+        font-family: sans-serif;
+    }
+
+    .loading-overlay.fade-out {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    /* Decorative Lines */
+    .decor-line {
+        position: absolute;
+        background-color: var(--color-line);
+    }
+
+    .h-line-top {
+        top: 10%;
+        left: 0;
+        width: 45%;
+        height: 2px;
+    }
+
+    .v-line-right {
+        right: 6%;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+    }
+
+    /* Status Bar Area (Bottom) */
+    .status-bar-container {
+        position: absolute;
+        bottom: 15%;
+        left: 0;
+        width: 100%;
+        height: 88px;
+        display: flex;
+        align-items: flex-end;
+    }
+
+    .cyan-bar {
+        width: 78%;
+        height: 100%;
+        background-color: var(--color-cyan);
+    }
+
+    .magenta-line {
+        flex-grow: 1;
+        height: 4px;
+        background-color: var(--color-magenta);
+    }
+
+    /* Massive Badge Logo */
+    .badge-container {
+        position: absolute;
+        bottom: 4%;
+        left: 0; /* Pushed to the far left edge */
+        width: min(70vw, 1200px);
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    .badge-img {
+        width: 100%;
+        height: auto;
+        display: block;
+        filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.5));
+    }
+
+    /* Name Block (Top Right) - Detailed Geometry */
+    .name-block-outer {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding-top: 40px;
+        z-index: 20;
+    }
+
+    .name-block-container {
+        display: flex;
+        align-items: flex-start;
+        gap: 32px;
+    }
+
+    .accent-squares {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        padding-top: 32px;
+        align-items: center;
+    }
+
+    .square {
+        width: 38px;
+        height: 38px;
+        position: relative;
+    }
+
+    .square.hollow {
+        border: 4px solid var(--color-line);
+    }
+
+    .square.solid-magenta.large-square {
+        /* 3x increase from ~38px is ~114px */
+        width: 110px;
+        height: 110px;
+        background-color: var(--color-magenta);
+        box-shadow: 25px 25px 0 rgba(0, 0, 0, 0.4);
+        /* Shifted left to properly emphasize the slant area */
+        transform: translate(20px, 10px); 
+    }
+
+    .name-content {
+        position: relative;
+        padding: 24px 80px 32px 100px;
+        min-width: 620px;
+    }
+
+    .trapezoid-bg {
+        position: absolute;
+        inset: 0;
+        background-color: #000;
+        /* 5-Point Polygon with steep slant */
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%, 0% 45%);
+        z-index: -1;
+    }
+
+    .name-images {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 12px;
+    }
+
+    .name-zh {
+        height: 96px;
+        width: auto;
+        display: block;
+    }
+
+    /* Broken White Line Logic */
+    .white-separator-container {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
+        padding-right: 0;
+    }
+
+    .white-separator {
+        /* Stops before hitting the left edge/slant */
+        width: 82%; 
+        height: 4px;
+        background-color: #fff;
+        margin: 6px 0;
+    }
+
+    .name-en {
+        height: 48px;
+        width: auto;
+        display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+        .badge-container { width: 85vw; }
+        .name-content { min-width: 450px; padding-left: 80px; }
+        .name-zh { height: 72px; }
+        .name-en { height: 36px; }
+        .square.solid-magenta.large-square { width: 80px; height: 80px; }
+    }
+
+    @media (max-width: 768px) {
+        .badge-container { width: 95vw; bottom: 8%; }
+        .name-content { min-width: 320px; padding-left: 60px; padding-top: 15px; }
+        .name-zh { height: 48px; }
+        .name-en { height: 24px; }
+        .square.solid-magenta.large-square { width: 60px; height: 60px; }
+    }
+</style>
+
+<script>
+    function startLoadingTimer() {
+        const loadingScreen = document.getElementById('loading-screen');
+        if (!loadingScreen) return;
+
+        setTimeout(() => {
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+                loadingScreen.style.display = 'none';
+            }, 800);
+        }, 3000);
+    }
+
+    startLoadingTimer();
+</script>
