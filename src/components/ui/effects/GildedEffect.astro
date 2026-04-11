@@ -1,267 +1,222 @@
 ---
-// moved from src/components/FluidBackground.astro
+// GildedEffect.astro - Refactored for robust local container use with vUv coordinates and dynamic loading progress.
+interface Props {
+  zIndex?: number;
+}
+const { zIndex = 1 } = Astro.props;
 ---
 
-<canvas id="fluid-canvas" class="fluid-background"></canvas>
+<div class="fluid-container" style={`z-index: ${zIndex};`}>
+  <canvas class="fluid-canvas"></canvas>
+</div>
 
 <style>
-  .fluid-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: -1;
+  .fluid-container {
+    position: absolute;
+    inset: 0;
     pointer-events: none;
-    background-color: transparent;
+    overflow: hidden;
+    background-color: #0c0f14;
+  }
+  .fluid-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 </style>
 
 <script>
-  function initWebGL() {
-    const canvas = document.getElementById('fluid-canvas') as HTMLCanvasElement;
-    if (!canvas) return;
-    const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
-    if (!gl) { console.error('WebGL not supported'); return; }
+  function initGildedEffect() {
+    const canvases = document.querySelectorAll('.fluid-canvas') as NodeListOf<HTMLCanvasElement>;
+    
+    canvases.forEach(canvas => {
+      if ((canvas as any)._gilded_init) return;
+      (canvas as any)._gilded_init = true;
 
-    const vsSource = `
-      attribute vec2 a_position;
-      void main() { gl_Position = vec4(a_position, 0.0, 1.0); }
-    `;
+      const gl = (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')) as WebGLRenderingContext | null;
+      if (!gl) return;
 
-    const fsSource = `
-      precision highp float;
-      uniform vec2  u_resolution;
-      uniform float u_time;
-      uniform vec4  u_cardRect; // normalized CSS coords: left,top,right,bottom
-      uniform float u_dpr;
+      const vsSource = `
+        attribute vec2 a_position;
+        varying vec2 vUv;
+        void main() { 
+          vUv = a_position * 0.5 + 0.5;
+          gl_Position = vec4(a_position, 0.0, 1.0); 
+        }
+      `;
 
-      vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
-      vec3 mod289v3(vec3 x){return x - floor(x*(1.0/289.0))*289.0;}
-      vec4 mod289v4(vec4 x){return x - floor(x*(1.0/289.0))*289.0;}
-      vec4 permute(vec4 x){return mod289v4(((x*34.0)+1.0)*x);}
+      const fsSource = `
+        precision highp float;
+        varying vec2 vUv;
+        uniform vec2  u_resolution;
+        uniform float u_time;
+        uniform float u_progress;
 
-      float snoise(vec3 v){
-        const vec2 C=vec2(1.0/6.0,1.0/3.0);
-        const vec4 D=vec4(0.0,0.5,1.0,2.0);
-        vec3 i=floor(v+dot(v,C.yyy));
-        vec3 x0=v-i+dot(i,C.xxx);
-        vec3 g=step(x0.yzx,x0.xyz);
-        vec3 l=1.0-g;
-        vec3 i1=min(g.xyz,l.zxy);
-        vec3 i2=max(g.xyz,l.zxy);
-        vec3 x1=x0-i1+C.xxx;
-        vec3 x2=x0-i2+C.yyy;
-        vec3 x3=x0-D.yyy;
-        i=mod289v3(i);
-        vec4 p=permute(permute(permute(i.z+vec4(0.0,i1.z,i2.z,1.0))+i.y+vec4(0.0,i1.y,i2.y,1.0))+i.x+vec4(0.0,i1.x,i2.x,1.0));
-        float n_=0.142857142857;
-        vec3 ns=n_*D.wyz-D.xzx;
-        vec4 j=p-49.0*floor(p*ns.z*ns.z);
-        vec4 x_=floor(j*ns.z);
-        vec4 y_=floor(j-7.0*x_);
-        vec4 x=x_*ns.x+ns.yyyy;
-        vec4 y=y_*ns.x+ns.yyyy;
-        vec4 h=1.0-abs(x)-abs(y);
-        vec4 b0=vec4(x.xy,y.xy);
-        vec4 b1=vec4(x.zw,y.zw);
-        vec4 s0=floor(b0)*2.0+1.0;
-        vec4 s1=floor(b1)*2.0+1.0;
-        vec4 sh=-step(h,vec4(0.0));
-        vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;
-        vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
-        vec3 p0=vec3(a0.xy,h.x);
-        vec3 p1=vec3(a0.zw,h.y);
-        vec3 p2=vec3(a1.xy,h.z);
-        vec3 p3=vec3(a1.zw,h.w);
-        vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
-        p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
-        vec4 m=max(0.5-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.0);
-        m=m*m;
-        return 105.0*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
-      }
+        // --- Noise ---
+        vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+        vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
+        vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
 
-      float fbm(vec3 x){
-        float v=0.0; float a=0.5;
-        vec3 shift=vec3(100.0);
-        for(int i=0;i<4;++i){v+=a*snoise(x);x=x*2.0+shift;a*=0.4;}
-        return v;
-      }
-
-      float fbmFast(vec3 x){
-        float v=0.0; float a=0.5;
-        vec3 shift=vec3(100.0);
-        // 2 octaves only — enough for displacement direction, saves cost
-        for(int i=0;i<2;++i){v+=a*snoise(x);x=x*2.0+shift;a*=0.4;}
-        return v;
-      }
-
-      // Shared fluid sample
-      vec3 sampleFluid(vec2 p, float t){
-        vec2 q; q.x=fbm(vec3(p,t)); q.y=fbm(vec3(p+vec2(1.0),t));
-        vec2 r; r.x=fbm(vec3(p+1.2*q+vec2(1.7,9.2),t)); r.y=fbm(vec3(p+1.2*q+vec2(8.3,2.8),t));
-        float f=fbm(vec3(p+1.2*r,t));
-        vec3 colorTeal =vec3(0.15,0.35,0.40);
-        vec3 colorDeep =vec3(0.05,0.08,0.12);
-        vec3 colorLight=vec3(0.35,0.65,0.75);
-        vec3 col=mix(colorDeep,colorTeal,clamp((f+1.0)*0.5,0.0,1.0));
-        col=mix(col,colorLight,clamp(r.x*1.5-0.2,0.0,1.0));
-        return col;
-      }
-
-      void main(){
-        float t=u_time*0.015;
-        vec2 uv=(gl_FragCoord.xy-0.5*u_resolution)/min(u_resolution.y,u_resolution.x);
-        vec2 p=uv*0.4;
-
-        // Determine inside/outside card
-        vec2 sc=vec2(gl_FragCoord.x/u_resolution.x, 1.0-gl_FragCoord.y/u_resolution.y);
-        bool inside=(u_cardRect.z>0.01)&&sc.x>=u_cardRect.x&&sc.x<=u_cardRect.z&&sc.y>=u_cardRect.y&&sc.y<=u_cardRect.w;
-
-        // ---- OUTSIDE: perfect-circle dots flowing with fluid (3x3 Voronoi) ----
-        if(!inside){
-          vec3 colorTeal =vec3(0.15,0.35,0.40);
-          vec3 colorDeep =vec3(0.05,0.08,0.12);
-          vec3 colorLight=vec3(0.35,0.65,0.75);
-
-          float cellPx  = 5.0 * u_dpr;
-          // Which base cell does this pixel fall in (regular screen grid)
-          vec2 baseCellFloor = floor(gl_FragCoord.xy / cellPx);
-
-          float minDist    = 1e6;
-          float nearestLum = 0.0;
-
-          // 3x3 neighbor search: find the nearest flow-displaced dot center
-          for(int dy=-1; dy<=1; dy++){
-            for(int dx=-1; dx<=1; dx++){
-              vec2 cidx = baseCellFloor + vec2(float(dx), float(dy));
-              // Regular (undisplaced) center in screen pixels
-              vec2 cPx  = (cidx + 0.5) * cellPx;
-              // Convert to fluid p-space
-              vec2 cUv  = (cPx - 0.5*u_resolution) / min(u_resolution.y, u_resolution.x);
-              vec2 cP   = cUv * 0.4;
-              // Fast 2-octave warp for displacement vector (cheap)
-              vec2 cq; cq.x=fbmFast(vec3(cP,t)); cq.y=fbmFast(vec3(cP+vec2(1.0),t));
-              vec2 cr; cr.x=fbmFast(vec3(cP+cq+vec2(1.7,9.2),t));
-                       cr.y=fbmFast(vec3(cP+cq+vec2(8.3,2.8),t));
-              // Displace the dot center in screen space by the warp
-              vec2 movedCtr = cPx + cr * (cellPx * 1.8);
-              // Distance in TRUE screen space → always a perfect circle
-              float d = length(gl_FragCoord.xy - movedCtr);
-              if(d < minDist){
-                minDist = d;
-                // Luminance: full 4-octave fluid at this dot's position
-                float cf = fbm(vec3(cP + 1.2*cr, t));
-                vec3 col = mix(colorDeep, colorTeal, clamp((cf+1.0)*0.5, 0.0, 1.0));
-                col = mix(col, colorLight, clamp(cr.x*1.5-0.2, 0.0, 1.0));
-                float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
-                nearestLum = clamp(pow(lum*2.5, 0.5), 0.0, 1.0);
-              }
-            }
-          }
-
-          float fixedR = cellPx * 0.42;
-          float circle  = 1.0 - smoothstep(fixedR-1.0, fixedR+1.0, minDist);
-          gl_FragColor  = vec4(vec3(nearestLum * circle), 1.0);
-          return;
+        float snoise(vec3 v) {
+          const vec2 C = vec2(1.0/6.0, 1.0/3.0);
+          const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+          vec3 i  = floor(v + dot(v, C.yyy));
+          vec3 x0 = v - i + dot(i, C.xxx);
+          vec3 g = step(x0.yzx, x0.xyz);
+          vec3 l = 1.0 - g;
+          vec3 i1 = min(g.xyz, l.zxy);
+          vec3 i2 = max(g.xyz, l.zxy);
+          vec3 x1 = x0 - i1 + C.xxx;
+          vec3 x2 = x0 - i2 + C.yyy;
+          vec3 x3 = x0 - D.yyy;
+          i = mod289(i);
+          vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+          float n_ = 0.142857142857;
+          vec3 ns = n_ * D.wyz - D.xzx;
+          vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+          vec4 x_ = floor(j * ns.z);
+          vec4 y_ = floor(j - 7.0 * x_);
+          vec4 x = x_ * ns.x + ns.yyyy;
+          vec4 y = y_ * ns.x + ns.yyyy;
+          vec4 h = 1.0 - abs(x) - abs(y);
+          vec4 b0 = vec4(x.xy, y.xy);
+          vec4 b1 = vec4(x.zw, y.zw);
+          vec4 s0 = floor(b0) * 2.0 + 1.0;
+          vec4 s1 = floor(b1) * 2.0 + 1.0;
+          vec4 sh = -step(h, vec4(0.0));
+          vec4 a0 = b0.xzyw + s0.xzyw * sh.xxyy;
+          vec4 a1 = b1.xzyw + s1.xzyw * sh.zzww;
+          vec3 p0 = vec3(a0.xy, h.x);
+          vec3 p1 = vec3(a0.zw, h.y);
+          vec3 p2 = vec3(a1.xy, h.z);
+          vec3 p3 = vec3(a1.zw, h.w);
+          vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
+          p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+          vec4 m = max(0.5 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+          m = m * m;
+          return 105.0 * dot(m * m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
         }
 
-        // ---- INSIDE: full fluid + veins + lighting ----
-        vec2 q; q.x=fbm(vec3(p,t)); q.y=fbm(vec3(p+vec2(1.0),t));
-        vec2 r; r.x=fbm(vec3(p+1.2*q+vec2(1.7,9.2),t)); r.y=fbm(vec3(p+1.2*q+vec2(8.3,2.8),t));
-        float f=fbm(vec3(p+1.2*r,t));
+        float fbm(vec3 x) {
+          float v = 0.0; float a = 0.5;
+          vec3 shift = vec3(100.0);
+          for (int i = 0; i < 4; ++i) {
+            v += a * snoise(x);
+            x = x * 2.0 + shift;
+            a *= 0.45;
+          }
+          return v;
+        }
 
-        vec3 colorTeal =vec3(0.15,0.35,0.40);
-        vec3 colorDeep =vec3(0.05,0.08,0.12);
-        vec3 colorLight=vec3(0.35,0.65,0.75);
+        void main() {
+          float t = u_time * 0.12; // Much slower, calmer flow
+          vec2 res = u_resolution.xy;
+          float aspect = res.x / res.y;
+          
+          // EVEN MORE LOOSE: Further reduced scale to zoom in more
+          vec2 p = vec2(vUv.x * min(aspect, 4.0), vUv.y) * 0.5; 
 
-        vec3 bgCol=mix(colorDeep,colorTeal,clamp((f+1.0)*0.5,0.0,1.0));
-        bgCol=mix(bgCol,colorLight,clamp(r.x*1.5-0.2,0.0,1.0));
+          vec2 q = vec2(fbm(vec3(p, t)), fbm(vec3(p + vec2(1.0), t)));
+          vec2 r = vec2(fbm(vec3(p + 3.0 * q + vec2(1.7, 9.2), t * 0.5)), fbm(vec3(p + 3.0 * q + vec2(8.3, 2.8), t * 0.5)));
+          float f = fbm(vec3(p + 2.0 * r, t));
 
-        float veinNoise=snoise(vec3(p*2.5+q,t*1.2))+0.4*snoise(vec3(p*5.0+q*0.5+vec2(5.0),t*1.5));
-        float vein=1.0-smoothstep(0.0,0.07,abs(veinNoise));
-        vec3 colorPink=vec3(0.85,0.55,0.70);
-        float pinkMask=clamp(vein*clamp(fbm(vec3(p*2.0-r,t))+0.4,0.0,1.0)*1.5,0.0,1.0);
+          // Gilded Palette - Changed Gold to Bright Pink
+          vec3 colorLightTeal = vec3(0.10, 0.70, 0.55); 
+          vec3 colorBase      = vec3(0.04, 0.05, 0.07); 
+          vec3 colorAccent    = vec3(0.95, 0.15, 0.55); // Vibrant Bright Pink
+          vec3 colorGlow      = vec3(0.98, 0.85, 0.95); // Pinkish Glow
 
-        float eps=0.03;
-        vec3 normal=normalize(vec3(f-fbm(vec3(p+vec2(eps,0.0)+r,t)),f-fbm(vec3(p+vec2(0.0,eps)+r,t)),eps*6.0));
-        vec3 lightDir=normalize(vec3(1.0,1.0,2.0));
-        float diffuse=max(dot(normal,lightDir),0.0);
-        vec3 reflectDir=reflect(-lightDir,normal);
-        float spec=pow(max(dot(vec3(0.0,0.0,1.0),reflectDir),0.0),20.0);
-        float metalSpec=pow(max(dot(vec3(0.0,0.0,1.0),reflectDir),0.0),60.0);
+          vec3 colorFull = mix(colorBase, colorLightTeal, clamp((f + 1.0) * 0.45, 0.0, 1.0));
+          colorFull = mix(colorFull, colorGlow, clamp(r.x * 2.0 - 1.5, 0.0, 1.0));
 
-        vec3 fc=bgCol*(diffuse*0.65+0.35)+spec*colorLight*0.5;
-        fc=mix(fc,colorPink*(0.8+metalSpec*2.5),pinkMask);
-        fc+=metalSpec*pinkMask*vec3(1.0,0.9,0.95);
+          // Shrink Pink areas: Higher power and tighter smoothstep
+          float veinNoise = snoise(vec3(p * 1.5 + q * 0.8, t * 1.0)) + 0.15 * snoise(vec3(p * 3.0, t * 1.5));
+          float vein = 1.0 - smoothstep(0.0, 0.1, abs(veinNoise)); // Tighter threshold
+          float highlight = pow(clamp(vein, 0.0, 1.0), 12.0) * 2.0; // Higher power = smaller dots/lines
 
-        gl_FragColor=vec4(fc,1.0);
-      }
-    `;
+          colorFull = mix(colorFull, colorAccent, clamp(highlight * 0.5, 0.0, 1.0));
+          colorFull += highlight * 0.3 * colorGlow;
 
-    function mkShader(type: number, src: string){
-      const s=gl!.createShader(type)!;
-      gl!.shaderSource(s,src); gl!.compileShader(s);
-      if(!gl!.getShaderParameter(s,gl!.COMPILE_STATUS)){
-        console.error(gl!.getShaderInfoLog(s)); gl!.deleteShader(s); return null;
-      }
-      return s;
-    }
+          // Grayscale Logic
+          float lum = dot(colorFull, vec3(0.299, 0.587, 0.114));
+          vec3 colorGray = vec3(lum * 1.1); 
 
-    const vs=mkShader(gl.VERTEX_SHADER,vsSource);
-    const fs=mkShader(gl.FRAGMENT_SHADER,fsSource);
-    if(!vs||!fs) return;
+          // Divider / Scanline Glow - Drastically reduced intensity
+          float divider = 1.0 - smoothstep(0.0, 0.005, abs(vUv.x - u_progress));
+          vec3 edgeGlow = colorAccent * divider * 0.55;
 
-    const prog=gl.createProgram()!;
-    gl.attachShader(prog,vs); gl.attachShader(prog,fs); gl.linkProgram(prog);
-    if(!gl.getProgramParameter(prog,gl.LINK_STATUS)){console.error(gl.getProgramInfoLog(prog));return;}
+          // Final Composite
+          vec3 finalCol = mix(colorGray, colorFull, step(vUv.x, u_progress));
+          finalCol += edgeGlow;
 
-    const posAttr=gl.getAttribLocation(prog,"a_position");
-    const buf=gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER,buf);
-    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+          gl_FragColor = vec4(finalCol, 1.0);
+        }
+      `;
 
-    const uTime    = gl.getUniformLocation(prog,"u_time");
-    const uRes     = gl.getUniformLocation(prog,"u_resolution");
-    const uCard    = gl.getUniformLocation(prog,"u_cardRect");
-    const uDpr     = gl.getUniformLocation(prog,"u_dpr");
-
-    function resize(){
-      const dpr=window.devicePixelRatio||1;
-      const w=window.innerWidth, h=window.innerHeight;
-      if(canvas.width!==w*dpr||canvas.height!==h*dpr){
-        canvas.width=w*dpr; canvas.height=h*dpr;
-        canvas.style.width=w+'px'; canvas.style.height=h+'px';
-      }
-    }
-
-    function render(time: number){
-      time*=0.001;
-      resize();
-      gl!.viewport(0,0,gl!.canvas.width,gl!.canvas.height);
-      gl!.useProgram(prog);
-      gl!.enableVertexAttribArray(posAttr);
-      gl!.bindBuffer(gl!.ARRAY_BUFFER,buf);
-      gl!.vertexAttribPointer(posAttr,2,gl!.FLOAT,false,0,0);
-      gl!.uniform2f(uRes,gl!.canvas.width,gl!.canvas.height);
-      gl!.uniform1f(uTime,time);
-      gl!.uniform1f(uDpr,window.devicePixelRatio||1);
-
-      const card=document.querySelector('.glass-card');
-      if(card){
-        const rc=(card as Element).getBoundingClientRect();
-        const vw=window.innerWidth, vh=window.innerHeight;
-        gl!.uniform4f(uCard,rc.left/vw,rc.top/vh,rc.right/vw,rc.bottom/vh);
-      } else {
-        gl!.uniform4f(uCard,0,0,0,0);
+      function compile(type: number, src: string) {
+        const s = gl!.createShader(type)!;
+        gl!.shaderSource(s, src); gl!.compileShader(s);
+        if (!gl!.getShaderParameter(s, gl!.COMPILE_STATUS)) {
+          console.error(gl!.getShaderInfoLog(s));
+          return null;
+        }
+        return s;
       }
 
-      gl!.drawArrays(gl!.TRIANGLES,0,6);
-      requestAnimationFrame(render);
-    }
+      const vs = compile(gl.VERTEX_SHADER, vsSource);
+      const fs = compile(gl.FRAGMENT_SHADER, fsSource);
+      if (!vs || !fs) return;
 
-    requestAnimationFrame(render);
+      const prog = gl.createProgram()!;
+      gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+      const posAttr = gl.getAttribLocation(prog, "a_position");
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
+
+      const uTime = gl.getUniformLocation(prog, "u_time");
+      const uRes = gl.getUniformLocation(prog, "u_resolution");
+      const uProgress = gl.getUniformLocation(prog, "u_progress");
+
+      const startTime = performance.now();
+
+      function loop(now: number) {
+        const dpr = window.devicePixelRatio || 1;
+        const w = (canvas.parentElement?.clientWidth || 0);
+        const h = (canvas.parentElement?.clientHeight || 0);
+        if (w === 0 || h === 0) { requestAnimationFrame(loop); return; }
+
+        if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+          canvas.width = Math.floor(w * dpr);
+          canvas.height = Math.floor(h * dpr);
+        }
+
+        gl!.viewport(0, 0, gl!.canvas.width, gl!.canvas.height);
+        gl!.useProgram(prog);
+        gl!.enableVertexAttribArray(posAttr);
+        gl!.bindBuffer(gl!.ARRAY_BUFFER, buf);
+        gl!.vertexAttribPointer(posAttr, 2, gl!.FLOAT, false, 0, 0);
+
+        // Calculate DRAMATIC Parabolic Progress (1 - (1-t)^4)
+        const elapsed = (now - startTime) / 3000.0;
+        const t = Math.min(1.0, Math.max(0.0, elapsed));
+        const progress = 1.0 - Math.pow(1.0 - t, 4.0);
+
+        gl!.uniform2f(uRes, gl!.canvas.width, gl!.canvas.height);
+        gl!.uniform1f(uTime, now * 0.001);
+        gl!.uniform1f(uProgress, progress);
+
+        gl!.drawArrays(gl!.TRIANGLES, 0, 6);
+        requestAnimationFrame(loop);
+      }
+
+      requestAnimationFrame(loop);
+    });
   }
 
-  document.addEventListener("DOMContentLoaded", initWebGL);
+  document.addEventListener("DOMContentLoaded", initGildedEffect);
+  if (document.readyState === "complete" || document.readyState === "interactive") {
+    initGildedEffect();
+  }
 </script>

@@ -1,11 +1,5 @@
 ---
-/**
- * LoadingScreen.astro
- * 
- * Final high-fidelity loading screen recreation.
- * Features: Massive 4x Logo, Corrected 5-point complex slant, 3s transition.
- * Revisions: Extra Large Pink Square (3x jump), Floating Broken Separator Line.
- */
+import GildedEffect from '../effects/GildedEffect.astro';
 ---
 
 <div id="loading-screen" class="loading-overlay">
@@ -15,12 +9,17 @@
     
     <!-- Status Bar Area (Bottom) -->
     <div class="status-bar-container">
-        <div class="cyan-bar"></div>
+        <div class="loading-bar">
+            <!-- Gilded Effect Overlay (Contained) -->
+            <GildedEffect zIndex={1} />
+        </div>
         <div class="magenta-line"></div>
     </div>
 
     <!-- Badge Logo (Massive Scale) -->
     <div class="badge-container">
+        <!-- Colored Accent Layer (Linear Burn Effect) -->
+        <div class="badge-accent"></div>
         <img src="/assets/loading/Volleier-Logo.png" alt="Badge Logo" class="badge-img" />
     </div>
 
@@ -79,20 +78,6 @@
         background-color: var(--color-line);
     }
 
-    .h-line-top {
-        top: 10%;
-        left: 0;
-        width: 45%;
-        height: 2px;
-    }
-
-    .v-line-right {
-        right: 6%;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-    }
-
     /* Status Bar Area (Bottom) */
     .status-bar-container {
         position: absolute;
@@ -104,10 +89,12 @@
         align-items: flex-end;
     }
 
-    .cyan-bar {
+    .loading-bar {
         width: 78%;
         height: 100%;
-        background-color: var(--color-cyan);
+        background-color: #000; /* Solid background for the effect to shine on */
+        position: relative;
+        overflow: hidden;
     }
 
     .magenta-line {
@@ -131,6 +118,25 @@
         height: auto;
         display: block;
         filter: drop-shadow(0 0 40px rgba(0, 0, 0, 0.5));
+        position: relative;
+        z-index: 2;
+    }
+
+    .badge-accent {
+        position: absolute;
+        inset: 0;
+        left: 12px; /* Shifted right for the "stroke" effect */
+        z-index: 1;
+        background-color: #00ff9d;
+        -webkit-mask-image: url('/assets/loading/Volleier-Logo.png');
+        mask-image: url('/assets/loading/Volleier-Logo.png');
+        -webkit-mask-size: contain;
+        mask-size: contain;
+        -webkit-mask-repeat: no-repeat;
+        mask-repeat: no-repeat;
+        /* "线性加深" Linear Burn simulation */
+        mix-blend-mode: color-burn;
+        opacity: 0.9;
     }
 
     /* Name Block (Top Right) - Detailed Geometry */
