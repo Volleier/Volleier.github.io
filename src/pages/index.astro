@@ -2,13 +2,198 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Counter from '../components/islands/Counter.jsx';
 ---
-<BaseLayout>
-  <!-- 居中毛玻璃卡片 -->
-  <main class="fixed inset-0 z-10 flex items-center justify-center">
-    <div class="glass-card">
-      <img src="/assets/PengLaiSiShaoXiao.png" alt="PengLaiSiShaoXiao Header Image" class="logo-img" />
-      <Counter client:idle />
+<BaseLayout showNav={false} showFooter={false}>
+  <main class="index-container">
+    <!-- Decorative Serifs -->
+    <div class="serif serif-top"></div>
+    <div class="serif serif-bottom"></div>
+    <div class="serif serif-left"></div>
+    <div class="serif serif-right"></div>
+
+    <div class="content-wrapper">
+      <!-- Centered Logo -->
+      <div class="logo-area">
+        <img 
+          src="/assets/Default/PengLaiSiShaoXiao-Logo.png" 
+          alt="PengLaiSiShaoXiao Logo" 
+          class="main-logo"
+        />
+      </div>
+
+      <!-- Industrial Buttons Container -->
+      <div class="button-group">
+        <a href="#" class="tech-button">
+          <span class="tech-tag">CMD_01</span>
+          <span class="tech-label">个人作品集</span>
+          <div class="tech-accent"></div>
+        </a>
+        <a href="#" class="tech-button">
+          <span class="tech-tag">CMD_02</span>
+          <span class="tech-label">介绍</span>
+          <div class="tech-accent"></div>
+        </a>
+        <a href="#" class="tech-button">
+          <span class="tech-tag">CMD_03</span>
+          <span class="tech-label">架空世界观</span>
+          <div class="tech-accent"></div>
+        </a>
+      </div>
     </div>
   </main>
 </BaseLayout>
+
+<style>
+  :root {
+    --tech-cyan: #00ffcc;
+    --tech-magenta: #ff108b;
+    --tech-bg: rgba(255, 255, 255, 0.03);
+    --tech-border: rgba(255, 255, 255, 0.2);
+  }
+
+  .index-container {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #2b2b2b;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  .content-wrapper {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* Reduced gap to bring them closer */
+    width: 100%;
+    max-width: 1200px;
+    margin-top: 20vh; /* Increased margin to keep it centered-bottom */
+  }
+
+  /* Logo Area */
+  .logo-area {
+    display: flex;
+    justify-content: center;
+    filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
+  }
+
+  .main-logo {
+    width: 640px; /* 2x increase from 320px */
+    height: auto;
+    object-fit: contain;
+  }
+
+  /* Button Group - Now Horizontal Row */
+  .button-group {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    gap: 24px;
+    width: 100%;
+    padding: 0 40px;
+  }
+
+  /* Industrial Technical Button Style */
+  .tech-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 32px;
+    background-color: var(--tech-bg);
+    border: 1px solid var(--tech-border);
+    color: #fff;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 1.1rem;
+    transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+    /* Skewed Tech Design */
+    clip-path: polygon(4% 0, 100% 0, 100% 70%, 96% 100%, 0 100%, 0 30%);
+  }
+
+  .tech-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: var(--tech-cyan);
+    transform: translateY(-5px); /* Changed to vertical lift for row layout */
+    box-shadow: 0 5px 15px rgba(0, 255, 204, 0.2);
+  }
+
+  .tech-tag {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: var(--tech-border);
+    transition: color 0.3s;
+  }
+
+  .tech-button:hover .tech-tag {
+    color: var(--tech-cyan);
+  }
+
+  .tech-label {
+    font-weight: 300;
+  }
+
+  /* Animated Accent for each button */
+  .tech-accent {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 3px;
+    background-color: var(--tech-cyan);
+    transition: width 0.3s ease;
+  }
+
+  .tech-button:hover .tech-accent {
+    width: 40%;
+  }
+
+  /* Decorative Serifs (Lines) - Consistent with LoadingScreen */
+  .serif {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.15);
+    z-index: 15;
+  }
+
+  .serif-top { top: 60px; left: 0; right: 0; height: 1px; }
+  .serif-bottom { bottom: 60px; left: 0; right: 0; height: 1px; }
+  .serif-left { left: 60px; top: 0; bottom: 0; width: 1px; }
+  .serif-right { right: 60px; top: 0; bottom: 0; width: 1px; }
+
+  /* Background Gradient */
+  .index-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 1024px) {
+    .main-logo { width: 480px; }
+    .button-group { gap: 16px; }
+  }
+
+  @media (max-width: 640px) {
+    .main-logo { width: 280px; }
+    .button-group { 
+      flex-direction: column; 
+      padding: 0 20px; 
+      gap: 12px;
+    }
+    .tech-button { 
+      font-size: 0.9rem; 
+      padding: 10px 24px;
+    }
+    .serif-top, .serif-bottom { top: 30px; bottom: 30px; }
+    .serif-left, .serif-right { left: 30px; right: 30px; }
+  }
+</style>
 

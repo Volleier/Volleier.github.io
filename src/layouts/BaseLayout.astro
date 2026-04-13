@@ -1,5 +1,11 @@
 ---
-const { title = 'Volleier', description = '', ogImage = '' } = Astro.props;
+const { 
+  title = 'Volleier', 
+  description = '', 
+  ogImage = '',
+  showNav = true,
+  showFooter = true
+} = Astro.props;
 import '../styles/global.css';
 import Nav from '../components/ui/common/Nav.astro';
 import Footer from '../components/ui/common/Footer.astro';
@@ -18,10 +24,10 @@ import LoadingScreen from '../components/ui/loading/LoadingScreen.astro';
   </head>
   <body class="min-h-screen flex flex-col">
     <LoadingScreen />
-    <Nav />
+    {showNav && <Nav />}
     <main class="flex-grow">
       <slot />
     </main>
-    <Footer />
+    {showFooter && <Footer />}
   </body>
 </html>
