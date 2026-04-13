@@ -57,7 +57,11 @@ import Counter from '../components/islands/Counter.jsx';
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #2b2b2b;
+    background-image: url('/assets/Default/DefaultPage.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: #2b2b2b; /* Fallback */
     overflow: hidden;
     font-family: 'Inter', system-ui, sans-serif;
   }
@@ -87,15 +91,22 @@ import Counter from '../components/islands/Counter.jsx';
     object-fit: contain;
   }
 
-  /* Button Group - Now Horizontal Row */
+  /* Button Group - Now Horizontal Row with a Base */
   .button-group {
     display: flex;
     flex-direction: row;
     justify-content: center;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
+    flex-wrap: wrap;
     gap: 24px;
-    width: 100%;
-    padding: 0 40px;
+    width: fit-content;
+    margin: 0 auto;
+    padding: 24px 48px;
+    background-color: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    /* Tech design clip-path (subtle) */
+    clip-path: polygon(2% 0, 100% 0, 100% 90%, 98% 100%, 0 100%, 0 10%);
   }
 
   /* Industrial Technical Button Style */
