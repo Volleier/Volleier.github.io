@@ -1,0 +1,449 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout title="About - Volleier" showNav={false} showFooter={false}>
+  <main class="about-container">
+    <!-- Clean Minimal HUD -->
+    <div class="serif serif-top"></div>
+    <div class="serif serif-bottom"></div>
+    <div class="serif serif-left"></div>
+    <div class="serif serif-right"></div>
+    
+    <div class="content-grid">
+      <!-- Left Panel: Profile -->
+      <aside class="profile-panel">
+        <div class="profile-card">
+          <div class="avatar-container">
+            <img src="/assets/about/avatar.png" alt="Volleier Avatar" class="avatar-img" />
+            <div class="avatar-accent"></div>
+          </div>
+          
+          <div class="identity-header">
+            <h1 class="subject-name">VOLLEIER</h1>
+            <span class="subject-id">ID.VLR_RESUME_SYNC</span>
+          </div>
+
+          <div class="identity-stats">
+            <div class="stat-item">
+              <span class="label">STATUS.</span>
+              <span class="value cyan">ACTIVE</span>
+            </div>
+            <div class="stat-item">
+              <span class="label">MAIL.</span>
+              <span class="value">Volleiershao@gmail.com</span>
+            </div>
+          </div>
+        </div>
+        
+        <a href="/" class="flat-button">
+          <span class="btn-tag">00</span>
+          <span class="btn-text">RETURN_HOME</span>
+        </a>
+      </aside>
+
+      <!-- Right Panel: Info -->
+      <section class="info-panel">
+        <!-- Bio / Core -->
+        <div class="info-card primary">
+          <div class="card-accent magenta"></div>
+          <header class="card-header">
+            <span class="tag">01_CORE_PROTOCOL</span>
+            <h2>核心协议 / CORE</h2>
+          </header>
+          <div class="card-body">
+            <p>
+              我是 Volleier，一名深耕于<b>虚幻引擎底层架构</b>与<b>人工智能算法</b>的跨界开发者。我主张将严谨的工业逻辑与极简的平面艺术结合，在 `C++` 的高性能世界与 `AI` 的前沿研究中构建未来。目前专注于探索高性能多人联机逻辑与神经渲染技术（NPR）。
+            </p>
+          </div>
+        </div>
+
+        <!-- Skills / Spec -->
+        <div class="info-card">
+          <div class="card-accent cyan"></div>
+          <header class="card-header">
+            <span class="tag">02_TECH_SPEC</span>
+            <h2>技术指标 / SPEC</h2>
+          </header>
+          <div class="card-body skill-list">
+            <div class="skill-row">
+              <div class="skill-name">ENGINE_DEV (UE/C++)</div>
+              <div class="skill-bar-container">
+                <div class="skill-bar" style="width: 95%"></div>
+              </div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-name">AI_ALGO (CV/LLM)</div>
+              <div class="skill-bar-container">
+                <div class="skill-bar" style="width: 90%"></div>
+              </div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-name">ART_TECH (BLENDER)</div>
+              <div class="skill-bar-container">
+                <div class="skill-bar" style="width: 82%"></div>
+              </div>
+            </div>
+            <div class="skill-row">
+              <div class="skill-name">FULL_STACK (JV/TS)</div>
+              <div class="skill-bar-container">
+                <div class="skill-bar" style="width: 88%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Achievements / Achievement -->
+         <div class="info-card">
+          <div class="card-accent gold"></div>
+          <header class="card-header">
+            <span class="tag">03_ACHIEVEMENT</span>
+            <h2>荣誉与成果 / ARCHIVE</h2>
+          </header>
+          <div class="card-body achievement-list">
+            <div class="achieve-item">
+                <span class="achieve-type">PAPER</span>
+                <p>3x SCI一区论文 (Nature Comm. / Nano Energy)</p>
+            </div>
+            <div class="achieve-item">
+                <span class="achieve-type">AWARD</span>
+                <p>CUSGA 游戏大赛决赛入围</p>
+            </div>
+            <div class="achieve-item">
+                <span class="achieve-type">AWARD</span>
+                <p>吉比特 48h 游戏开发赛 - 最佳潜力奖</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project / Project -->
+        <div class="info-card">
+          <div class="card-accent white"></div>
+          <header class="card-header">
+            <span class="tag">04_PROJECT_LOG</span>
+            <h2>项目记录 / PROJECT</h2>
+          </header>
+          <div class="card-body project-grid">
+            <div class="project-item">
+                <div class="item-head">BLASTER_TPS</div>
+                <p>基于 UE C++ 的多人联机射击游戏原型 (RPC/GAS)</p>
+            </div>
+            <div class="project-item">
+                <div class="item-head">GAS_CARD_GAME</div>
+                <div class="p">回合制卡牌架构实现，专注技能表现与数据处理</div>
+            </div>
+            <div class="project-item">
+                <div class="item-head">CLOCK_GOBLIN</div>
+                <p>C# 开源软件使用时长追踪分析工具</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Link -->
+        <div class="info-card">
+          <div class="card-accent transparent"></div>
+          <header class="card-header">
+            <span class="tag">05_COMM_LINK</span>
+            <h2>通讯链路 / LINK</h2>
+          </header>
+          <div class="card-body contact-links">
+            <a href="#" class="contact-item">GITHUB.LINK</a>
+            <a href="#" class="contact-item">PIXIV.LINK</a>
+            <a href="#" class="contact-item">PORTFOLIO.SYNC</a>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  :root {
+    --tech-cyan: #00ffcc;
+    --tech-magenta: #ff108b;
+    --tech-gold: #ffcc00;
+    --bg-dark: #1a1a1a;
+    --bg-surface: #2b2b2b;
+    --border-dim: rgba(255, 255, 255, 0.1);
+    --text-muted: rgba(255, 255, 255, 0.5);
+  }
+
+  .about-container {
+    position: fixed;
+    inset: 0;
+    background-color: var(--bg-surface);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  /* Flat Serifs */
+  .serif { position: absolute; background-color: var(--border-dim); z-index: 5; }
+  .serif-top { top: 40px; left: 0; right: 0; height: 1px; }
+  .serif-bottom { bottom: 40px; left: 0; right: 0; height: 1px; }
+  .serif-left { left: 40px; top: 0; bottom: 0; width: 1px; }
+  .serif-right { right: 40px; top: 0; bottom: 0; width: 1px; }
+
+  .content-grid {
+    position: relative;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 40px;
+    width: 90%;
+    max-width: 1100px;
+    height: 75vh;
+  }
+
+  /* Profile Card */
+  .profile-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .profile-card {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-dim);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .avatar-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    background: #000;
+  }
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    mix-blend-mode: luminosity;
+    opacity: 0.8;
+  }
+
+  .avatar-accent {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    width: 40px;
+    height: 40px;
+    background: var(--tech-cyan);
+    z-index: 2;
+  }
+
+  .subject-name {
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .subject-id {
+    font-family: monospace;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  .identity-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid var(--border-dim);
+    padding-top: 20px;
+  }
+
+  .stat-item {
+    display: flex;
+    justify-content: space-between;
+    font-family: monospace;
+    font-size: 0.85rem;
+  }
+
+  .stat-item .label { color: var(--text-muted); }
+  .stat-item .value.cyan { color: var(--tech-cyan); }
+
+  /* Flat Button */
+  .flat-button {
+    background: var(--tech-cyan);
+    color: #000;
+    text-decoration: none;
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: transform 0.2s;
+  }
+
+  .flat-button:hover {
+    transform: translate(4px, -4px);
+    box-shadow: -4px 4px 0 #005a48;
+  }
+
+  .btn-tag {
+    font-size: 0.7rem;
+    border-right: 1px solid rgba(0,0,0,0.2);
+    padding-right: 15px;
+  }
+
+  /* Info Panel */
+  .info-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    padding-right: 15px;
+  }
+
+  .info-panel::-webkit-scrollbar { width: 2px; }
+  .info-panel::-webkit-scrollbar-thumb { background: var(--text-muted); }
+
+  .info-card {
+    position: relative;
+    background: var(--bg-dark);
+    border: 1px solid var(--border-dim);
+    padding: 30px;
+  }
+
+  .card-accent {
+    position: absolute;
+    left: 0;
+    top: 30px;
+    width: 4px;
+    height: 40px;
+  }
+  .card-accent.magenta { background: var(--tech-magenta); }
+  .card-accent.cyan { background: var(--tech-cyan); }
+  .card-accent.gold { background: var(--tech-gold); }
+  .card-accent.white { background: #fff; }
+  .card-accent.transparent { background: transparent; border-left: 4px solid var(--tech-cyan); }
+
+  .card-header {
+    margin-bottom: 20px;
+  }
+
+  .tag {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .card-header h2 {
+    font-size: 1.25rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .card-body {
+    color: rgba(255,255,255,0.7);
+    line-height: 1.8;
+    font-size: 1rem;
+  }
+
+  /* Skill List */
+  .skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  .skill-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .skill-name {
+    width: 180px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .skill-bar-container {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.05);
+  }
+  .skill-bar {
+    height: 100%;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+  }
+
+  /* Achievement List */
+  .achievement-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .achieve-item {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+  }
+  .achieve-type {
+    font-family: monospace;
+    font-size: 0.65rem;
+    background: rgba(255,255,255,0.1);
+    padding: 2px 6px;
+    color: var(--tech-gold);
+  }
+
+  /* Project Grid */
+  .project-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+  }
+  .project-item {
+      background: rgba(255,255,255,0.02);
+      padding: 15px;
+      border: 1px solid var(--border-dim);
+  }
+  .item-head {
+      font-weight: bold;
+      font-size: 0.85rem;
+      color: var(--tech-cyan);
+      margin-bottom: 8px;
+  }
+  .project-item p {
+      font-size: 0.8rem;
+      margin: 0;
+  }
+
+  /* Contact Links */
+  .contact-links {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .contact-item {
+    color: #fff;
+    text-decoration: none;
+    font-family: monospace;
+    font-size: 0.9rem;
+    border-bottom: 1px solid var(--tech-cyan);
+    padding-bottom: 2px;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .content-grid {
+      grid-template-columns: 1fr;
+      height: auto;
+      overflow-y: visible;
+      padding: 80px 0;
+    }
+    .profile-panel { max-width: 400px; margin: 0 auto; width: 100%; }
+    .project-grid { grid-template-columns: 1fr; }
+  }
+</style>
