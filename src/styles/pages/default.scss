@@ -1,0 +1,162 @@
+.index-container {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image: url('/assets/default/DefaultPage.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #2b2b2b; /* Fallback */
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    pointer-events: none;
+  }
+}
+
+.content-wrapper {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px; /* Reduced gap to bring them closer */
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 20vh; /* Increased margin to keep it centered-bottom */
+}
+
+/* Logo Area */
+.logo-area {
+  display: flex;
+  justify-content: center;
+  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
+
+  .main-logo {
+    width: 640px; /* 2x increase from 320px */
+    height: auto;
+    object-fit: contain;
+
+    @media (max-width: 1024px) {
+      width: 480px;
+    }
+
+    @media (max-width: 640px) {
+      width: 280px;
+    }
+  }
+}
+
+/* Button Group - Now Horizontal Row with a Base */
+.button-group {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 24px 48px;
+  background-color: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  /* Tech design clip-path (subtle) */
+  clip-path: polygon(2% 0, 100% 0, 100% 90%, 98% 100%, 0 100%, 0 10%);
+
+  @media (max-width: 1024px) {
+    gap: 16px;
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    padding: 0 20px;
+    gap: 12px;
+  }
+}
+
+/* Industrial Technical Button Style */
+.tech-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 32px;
+  background-color: var(--tech-bg);
+  border: 1px solid var(--tech-border);
+  color: #fff;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 1.1rem;
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  /* Skewed Tech Design */
+  clip-path: polygon(4% 0, 100% 0, 100% 70%, 96% 100%, 0 100%, 0 30%);
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: var(--tech-cyan);
+    transform: translateY(-5px); /* Changed to vertical lift for row layout */
+    box-shadow: 0 5px 15px rgba(0, 255, 204, 0.2);
+
+    .tech-tag {
+      color: var(--tech-cyan);
+    }
+
+    .tech-accent {
+      width: 40%;
+    }
+  }
+
+  .tech-tag {
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: var(--tech-border);
+    transition: color 0.3s;
+  }
+
+  .tech-label {
+    font-weight: 300;
+  }
+
+  /* Animated Accent for each button */
+  .tech-accent {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 0;
+    height: 3px;
+    background-color: var(--tech-cyan);
+    transition: width 0.3s ease;
+  }
+
+  @media (max-width: 640px) {
+    font-size: 0.9rem;
+    padding: 10px 24px;
+  }
+}
+
+/* Decorative Serifs (Lines) - Consistent with LoadingScreen */
+.serif {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.15);
+  z-index: 15;
+
+  &-top { top: 60px; left: 0; right: 0; height: 1px; }
+  &-bottom { bottom: 60px; left: 0; right: 0; height: 1px; }
+  &-left { left: 60px; top: 0; bottom: 0; width: 1px; }
+  &-right { right: 60px; top: 0; bottom: 0; width: 1px; }
+
+  @media (max-width: 640px) {
+    &-top, &-bottom { top: 30px; bottom: 30px; }
+    &-left, &-right { left: 30px; right: 30px; }
+  }
+}
