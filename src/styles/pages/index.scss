@@ -1,3 +1,12 @@
+:root {
+  --tech-cyan: #00ffcc;
+  --tech-orange: #ff5500;
+  --tech-border-light: rgba(255, 255, 255, 0.3);
+  --tech-border-dark: rgba(255, 255, 255, 0.1);
+  --tech-bg-glass: rgba(10, 10, 12, 0.6);
+  --geo-accent: rgba(210, 120, 50, 0.2);
+}
+
 .index-container {
   position: fixed;
   inset: 0;
@@ -5,11 +14,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: url('/assets/default/DefaultPage.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: #2b2b2b; /* Fallback */
+  background-color: #1a1a1a; 
   overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
 
@@ -17,8 +22,315 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+    background: radial-gradient(circle at center, transparent 20%, rgba(0, 0, 0, 0.95) 150%);
     pointer-events: none;
+    z-index: 5;
+  }
+}
+
+.webgl-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 1. Giant Background Watermark */
+.background-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 22vw;
+  font-weight: 900;
+  color: #ffffff;
+  opacity: 0.04; 
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+  letter-spacing: -0.02em;
+}
+
+/* 3. HUD Decor Layer */
+.hud-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 15; 
+  font-family: monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 2px;
+
+  .hud-item {
+    position: absolute;
+    padding: 76px; /* Pushed in to safely sit inside the 60px serifs */
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    &.hud-top-left {
+      top: 0; left: 0;
+      flex-direction: row;
+      align-items: flex-start;
+      gap: 12px;
+      .rec-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #ff3333;
+        border-radius: 50%;
+        animation: blink 2s infinite;
+        margin-top: 3px;
+        box-shadow: 0 0 8px rgba(255, 51, 51, 0.6);
+      }
+    }
+    &.hud-top-right { top: 0; right: 0; text-align: right; }
+    &.hud-bottom-left { bottom: 0; left: 0; }
+    &.hud-bottom-right { 
+      bottom: 0; right: 0; text-align: right; 
+      .barcode {
+        width: 120px;
+        height: 14px;
+        background: repeating-linear-gradient(
+          90deg,
+          rgba(255,255,255,0.4),
+          rgba(255,255,255,0.4) 2px,
+          transparent 2px,
+          transparent 4px,
+          rgba(255,255,255,0.4) 4px,
+          rgba(255,255,255,0.4) 5px,
+          transparent 5px,
+          transparent 8px
+        );
+        margin-bottom: 6px;
+        margin-left: auto;
+      }
+    }
+  }
+}
+
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Edge Graphic Design Details */
+.index-container::before {
+  content: '';
+  position: absolute;
+  inset: 50px;
+  z-index: 14;
+  pointer-events: none;
+  /* Thick geometric L-brackets on the 4 corners */
+  background: 
+    linear-gradient(to right, rgba(255,255,255,0.4) 30px, transparent 30px) top left / 100% 3px no-repeat,
+    linear-gradient(to bottom, rgba(255,255,255,0.4) 30px, transparent 30px) top left / 3px 100% no-repeat,
+    
+    linear-gradient(to left, rgba(255,255,255,0.4) 30px, transparent 30px) top right / 100% 3px no-repeat,
+    linear-gradient(to bottom, rgba(255,255,255,0.4) 30px, transparent 30px) top right / 3px 100% no-repeat,
+    
+    linear-gradient(to right, rgba(255,255,255,0.4) 30px, transparent 30px) bottom left / 100% 3px no-repeat,
+    linear-gradient(to top, rgba(255,255,255,0.4) 30px, transparent 30px) bottom left / 3px 100% no-repeat,
+    
+    linear-gradient(to left, rgba(255,255,255,0.4) 30px, transparent 30px) bottom right / 100% 3px no-repeat,
+    linear-gradient(to top, rgba(255,255,255,0.4) 30px, transparent 30px) bottom right / 3px 100% no-repeat;
+}
+
+/* 4. Restored Original Serifs with Extra Detail */
+.serif {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.1);
+  z-index: 15;
+  pointer-events: none;
+
+  &-top { top: 60px; left: 0; right: 0; height: 1px; }
+  &-bottom { bottom: 60px; left: 0; right: 0; height: 1px; }
+  &-left { left: 60px; top: 0; bottom: 0; width: 1px; }
+  &-right { right: 60px; top: 0; bottom: 0; width: 1px; }
+
+  /* Timeline Marker Graphics */
+  .time-marker-container {
+    position: absolute;
+    left: var(--time-pct, 0%);
+    bottom: 0px; 
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    pointer-events: none;
+    .time-label {
+      font-family: monospace;
+      font-size: 8px;
+      color: var(--tech-orange);
+      letter-spacing: 2px;
+      margin-bottom: 2px;
+    }
+    
+    .time-text {
+      font-family: monospace;
+      font-size: 10px;
+      color: rgba(255, 255, 255, 0.85);
+      margin-bottom: 2px;
+      letter-spacing: 1px;
+    }
+    
+    .time-triangle {
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 4px solid var(--tech-cyan);
+    }
+  }
+
+  /* Adding tech dots at the intersections */
+  &::after {
+    content: '';
+    position: absolute;
+    background: var(--tech-cyan);
+    width: 4px;
+    height: 4px;
+    box-shadow: 0 0 8px var(--tech-cyan);
+  }
+
+  &-top::after { left: 60px; top: -1px; }
+  &-bottom::after { right: 60px; top: -1px; }
+  &-left::after { bottom: 60px; left: -1px; }
+  &-right::after { top: 60px; left: -1px; }
+
+  @media (max-width: 640px) {
+    &-top, &-bottom { top: 30px; bottom: 30px; }
+    &-left, &-right { left: 30px; right: 30px; }
+    &-top::after { left: 30px; }
+    &-bottom::after { right: 30px; }
+    &-left::after { bottom: 30px; }
+    &-right::after { top: 30px; }
+  }
+}
+
+/* 5. Subtle Graphic Decorations */
+.decor-layer {
+  position: absolute;
+  inset: 50px;
+  pointer-events: none;
+  z-index: 12;
+
+  .decor-v-text {
+    position: absolute;
+    right: -30px;
+    top: 30%;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-family: monospace;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 4px;
+    &::before {
+      content: '';
+      display: inline-block;
+      width: 1px;
+      height: 40px;
+      background: var(--tech-cyan);
+      margin-bottom: 15px;
+      margin-right: 3px;
+    }
+  }
+
+  .decor-grid-mini {
+    position: absolute;
+    bottom: -15px;
+    right: 15vw;
+    width: 60px;
+    height: 20px;
+    background-image: radial-gradient(rgba(255,255,255,0.4) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+
+  .decor-target {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+    
+    &.dt-1 { top: 20vh; left: 10vw; }
+    &.dt-2 { bottom: 35vh; right: 12vw; }
+  }
+
+  .decor-hazard {
+    position: absolute;
+    bottom: -10px;
+    left: 20vw;
+    width: 100px;
+    height: 4px;
+    background: repeating-linear-gradient(
+      -45deg,
+      rgba(255, 85, 0, 0.5),
+      rgba(255, 85, 0, 0.5) 4px,
+      transparent 4px,
+      transparent 8px
+    );
+    opacity: 0.8;
+  }
+
+  .decor-v-line {
+    position: absolute;
+    top: 25vh;
+    left: -10px;
+    width: 2px;
+    height: 400px;
+    background: var(--tech-cyan);
+    box-shadow: 0 0 8px var(--tech-cyan);
+    opacity: 0.6;
+  }
+
+  .decor-large-crosshair {
+    position: absolute;
+    left: -140px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 250px;
+    height: 250px;
+    border: 1px dotted rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      right: -25px;
+      width: 50px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.15);
+      transform: translateY(-50%);
+    }
+  }
+
+  .decor-bracket {
+    position: absolute;
+    right: -10px;
+    bottom: 25%;
+    width: 12px;
+    height: 40px;
+    border-top: 2px solid rgba(0, 255, 204, 0.3);
+    border-right: 2px solid rgba(0, 255, 204, 0.3);
+    border-bottom: 2px solid rgba(0, 255, 204, 0.3);
+    &::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      right: 4px;
+      width: 4px;
+      height: 20px;
+      background: rgba(0, 255, 204, 0.15);
+    }
   }
 }
 
@@ -28,135 +340,156 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px; /* Reduced gap to bring them closer */
+  gap: 30px;
   width: 100%;
   max-width: 1200px;
-  margin-top: 20vh; /* Increased margin to keep it centered-bottom */
+  margin-top: 15vh;
 }
 
 /* Logo Area */
 .logo-area {
   display: flex;
   justify-content: center;
-  filter: drop-shadow(0 0 20px rgba(0, 0, 0, 0.5));
+  filter: drop-shadow(0 0 30px rgba(0, 0, 0, 0.8));
 
   .main-logo {
-    width: 640px; /* 2x increase from 320px */
+    width: 720px;
     height: auto;
     object-fit: contain;
+    transform: translate(var(--logo-x, 0px), var(--logo-y, 0px));
 
     @media (max-width: 1024px) {
-      width: 480px;
+      width: 540px;
     }
 
     @media (max-width: 640px) {
-      width: 280px;
+      width: 320px;
     }
   }
 }
 
-/* Button Group - Now Horizontal Row with a Base */
+/* Button Group */
 .button-group {
   display: flex;
   flex-direction: row;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 24px;
+  gap: 32px;
   width: fit-content;
   margin: 0 auto;
-  padding: 24px 48px;
-  background-color: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-  /* Tech design clip-path (subtle) */
-  clip-path: polygon(2% 0, 100% 0, 100% 90%, 98% 100%, 0 100%, 0 10%);
+  padding: 32px 56px;
+  background-color: var(--tech-bg-glass);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid var(--tech-border-dark);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  /* Slightly more conventional tech cut */
+  clip-path: polygon(3% 0, 100% 0, 100% 85%, 97% 100%, 0 100%, 0 15%);
 
-  @media (max-width: 1024px) {
-    gap: 16px;
-  }
-
+  @media (max-width: 1024px) { gap: 20px; }
   @media (max-width: 640px) {
     flex-direction: column;
-    padding: 0 20px;
-    gap: 12px;
+    padding: 24px;
+    gap: 16px;
   }
 }
 
-/* Industrial Technical Button Style */
+/* Sub-components for buttons */
 .tech-button {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 32px;
-  background-color: var(--tech-bg);
-  border: 1px solid var(--tech-border);
+  justify-content: center;
+  width: 200px;
+  height: 54px;
+  background: transparent;
   color: #fff;
   text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 2px;
   font-size: 1.1rem;
-  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
-  /* Skewed Tech Design */
-  clip-path: polygon(4% 0, 100% 0, 100% 70%, 96% 100%, 0 100%, 0 30%);
+  letter-spacing: 2px;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  overflow: hidden;
 
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.08);
-    border-color: var(--tech-cyan);
-    transform: translateY(-5px); /* Changed to vertical lift for row layout */
-    box-shadow: 0 5px 15px rgba(0, 255, 204, 0.2);
+  /* Subtle background pattern */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(255,255,255,0.02) 2px, rgba(255,255,255,0.02) 4px);
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
 
-    .tech-tag {
-      color: var(--tech-cyan);
+  .btn-bracket {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 12px;
+    border: 1px solid var(--tech-border-light);
+    transition: all 0.3s;
+    z-index: 2;
+
+    &-left {
+      left: 0;
+      border-right: none;
     }
-
-    .tech-accent {
-      width: 40%;
+    &-right {
+      right: 0;
+      border-left: none;
     }
+  }
+
+  .btn-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 2;
   }
 
   .tech-tag {
     font-family: monospace;
-    font-size: 0.7rem;
-    color: var(--tech-border);
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
     transition: color 0.3s;
   }
 
   .tech-label {
-    font-weight: 300;
+    font-weight: 400;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
 
-  /* Animated Accent for each button */
+  /* Animated Accent Scanning Line */
   .tech-accent {
     position: absolute;
     bottom: 0;
-    right: 0;
-    width: 0;
-    height: 3px;
+    left: -100%;
+    width: 60%;
+    height: 2px;
     background-color: var(--tech-cyan);
-    transition: width 0.3s ease;
+    transition: left 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+    box-shadow: 0 0 10px var(--tech-cyan);
+    z-index: 3;
   }
 
-  @media (max-width: 640px) {
-    font-size: 0.9rem;
-    padding: 10px 24px;
-  }
-}
+  /* Hover States - Cleaned up without glitch */
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
 
-/* Decorative Serifs (Lines) - Consistent with LoadingScreen */
-.serif {
-  position: absolute;
-  background-color: rgba(255, 255, 255, 0.15);
-  z-index: 15;
+    &::before { opacity: 1; }
 
-  &-top { top: 60px; left: 0; right: 0; height: 1px; }
-  &-bottom { bottom: 60px; left: 0; right: 0; height: 1px; }
-  &-left { left: 60px; top: 0; bottom: 0; width: 1px; }
-  &-right { right: 60px; top: 0; bottom: 0; width: 1px; }
+    .btn-bracket {
+      border-color: var(--tech-cyan);
+      &-left { left: 4px; }
+      &-right { right: 4px; }
+    }
 
-  @media (max-width: 640px) {
-    &-top, &-bottom { top: 30px; bottom: 30px; }
-    &-left, &-right { left: 30px; right: 30px; }
+    .tech-tag { color: var(--tech-cyan); }
+    
+    .tech-label {
+      transform: scale(1.05);
+    }
+
+    .tech-accent { left: 100%; }
   }
 }

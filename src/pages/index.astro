@@ -4,8 +4,48 @@ import '../styles/pages/index.scss';
 ---
 <BaseLayout showNav={false} showFooter={false} showLoading={true}>
   <main class="index-container">
-    <!-- Decorative Serifs -->
-    <div class="serif serif-top"></div>
+    <canvas id="webgl-canvas" class="webgl-canvas"></canvas>
+
+    <!-- Subdued Graphic Decorations -->
+    <div class="decor-layer">
+      <div class="decor-v-text">SYSTEM.OVERRIDE // V1.0.4</div>
+      <div class="decor-grid-mini"></div>
+      <div class="decor-target dt-1"></div>
+      <div class="decor-target dt-2"></div>
+      
+      <!-- Newly added richness -->
+      <div class="decor-hazard"></div>
+      <div class="decor-v-line"></div>
+      <div class="decor-large-crosshair"></div>
+      <div class="decor-bracket"></div>
+    </div>
+
+    <!-- Giant Background Watermark -->
+    <div class="background-watermark">VOLLEIER</div>
+
+    <!-- HUD Decor Layer -->
+    <div class="hud-layer">
+      <div class="hud-item hud-top-left"></div>
+      <div class="hud-item hud-top-right"></div>
+      <div class="hud-item hud-bottom-left">
+        <span id="coord-x">LAT: +0.00</span>
+        <br/>
+        <span id="coord-y">LON: +0.00</span>
+      </div>
+      <div class="hud-item hud-bottom-right">
+        <div class="barcode"></div>
+        <span>V_1.0.4.REV</span>
+      </div>
+    </div>
+
+    <!-- Restored Original Serifs -->
+    <div class="serif serif-top">
+      <div class="time-marker-container" id="time-marker">
+        <div class="time-label">GMT</div>
+        <div class="time-text" id="time-text-val">00:00:00.000</div>
+        <div class="time-triangle"></div>
+      </div>
+    </div>
     <div class="serif serif-bottom"></div>
     <div class="serif serif-left"></div>
     <div class="serif serif-right"></div>
@@ -23,21 +63,207 @@ import '../styles/pages/index.scss';
       <!-- Industrial Buttons Container -->
       <div class="button-group">
         <a href="#" class="tech-button">
-          <span class="tech-tag">CMD_01</span>
-          <span class="tech-label">作品集</span>
+          <span class="btn-bracket btn-bracket-left"></span>
+          <div class="btn-content">
+            <span class="tech-tag">CMD_01 //</span>
+            <span class="tech-label">作品集</span>
+          </div>
+          <span class="btn-bracket btn-bracket-right"></span>
           <div class="tech-accent"></div>
         </a>
+        
         <a href="/about" class="tech-button">
-          <span class="tech-tag">CMD_02</span>
-          <span class="tech-label">介绍</span>
+          <span class="btn-bracket btn-bracket-left"></span>
+          <div class="btn-content">
+            <span class="tech-tag">CMD_02 //</span>
+            <span class="tech-label">介绍</span>
+          </div>
+          <span class="btn-bracket btn-bracket-right"></span>
           <div class="tech-accent"></div>
         </a>
+        
         <a href="/game/graymoth-squad" class="tech-button">
-          <span class="tech-tag">CMD_03</span>
-          <span class="tech-label">游戏</span>
+          <span class="btn-bracket btn-bracket-left"></span>
+          <div class="btn-content">
+            <span class="tech-tag">CMD_03 //</span>
+            <span class="tech-label">游戏</span>
+          </div>
+          <span class="btn-bracket btn-bracket-right"></span>
           <div class="tech-accent"></div>
         </a>
       </div>
     </div>
   </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.querySelector('.index-container');
+      const coordX = document.getElementById('coord-x');
+      const coordY = document.getElementById('coord-y');
+
+      window.addEventListener('mousemove', (e) => {
+        if (!container) return;
+        
+        // Use true DOM element boundaries instead of window width to guarantee strict mathematical symmetry
+        const rect = container.getBoundingClientRect();
+        const cx = rect.width / 2;
+        const cy = rect.height / 2;
+        
+        // Convert to container-relative coordinate system
+        const mouseX = (e.clientX - rect.left) - cx;
+        const mouseY = cy - (e.clientY - rect.top); // y-axis points upward
+
+        // 1. Update text coordinates
+        if (coordX && coordY) {
+          coordX.textContent = `LAT: ${(mouseX > 0 ? '+' : '')}${mouseX.toFixed(1)}`;
+          coordY.textContent = `LON: ${(mouseY > 0 ? '+' : '')}${mouseY.toFixed(1)}`;
+        }
+
+        // 2. Parallax Effects (No Transition Delay)
+        // Using normalized DOM-relative symmetric coordinates with doubled impact
+        const bgOffsetX = -mouseX * 0.08;
+        const bgOffsetY = mouseY * 0.08;
+        
+        // Logo moves less but slightly elevated multiplier for balance
+        const logoOffsetX = -mouseX * 0.02;
+        const logoOffsetY = mouseY * 0.02;
+
+        // Apply as CSS variables for DOM UI elements
+        if (container) {
+          container.style.setProperty('--logo-x', `${logoOffsetX}px`);
+          container.style.setProperty('--logo-y', `${logoOffsetY}px`);
+        }
+        
+        // Push vector offset directly into WebGL Shader uniform engine
+        if (window.updateWebGLOffset) {
+          window.updateWebGLOffset(bgOffsetX, bgOffsetY);
+        }
+      });
+
+      // 3. GMT Timeline Update Loop
+      const timeMarker = document.getElementById('time-marker');
+      const timeText = document.getElementById('time-text-val');
+
+      function updateTimeline() {
+        const now = new Date();
+        const hours = now.getUTCHours();
+        const minutes = now.getUTCMinutes();
+        const seconds = now.getUTCSeconds();
+        const ms = now.getUTCMilliseconds();
+
+        const totalMs = (hours * 3600000) + (minutes * 60000) + (seconds * 1000) + ms;
+        const pct = (totalMs / 86400000) * 100;
+
+        if (timeMarker) {
+          timeMarker.style.setProperty('--time-pct', `${pct}%`);
+        }
+        if (timeText) {
+          timeText.textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
+        }
+        requestAnimationFrame(updateTimeline);
+      }
+      requestAnimationFrame(updateTimeline);
+      
+      // 4. Raw WebGL Graphic Hardware Shader Initialization
+      function initExperimentalWebGL(cvs) {
+        const gl = cvs.getContext('webgl');
+        if (!gl) return;
+        const vsSrc = `attribute vec2 p;void main(){gl_Position=vec4(p,0.0,1.0);}`;
+        const fsSrc = `
+            precision highp float;
+            uniform sampler2D u_img;
+            uniform vec2 u_res;
+            uniform vec2 u_imgRes;
+            uniform vec2 u_off;
+
+            vec2 cover(vec2 uv, vec2 s, vec2 i) {
+                float rs = s.x/s.y; float ri = i.x/i.y;
+                vec2 st = (uv-0.5)*0.92+0.5; // Compensate coverage boundary softly
+                if(rs>ri) st.y=(st.y-0.5)*(ri/rs)+0.5;
+                else st.x=(st.x-0.5)*(rs/ri)+0.5;
+                return st;
+            }
+
+            void main() {
+                vec2 st = gl_FragCoord.xy / u_res;
+                float aspect = u_res.x/u_res.y;
+                vec2 p = st - 0.5; p.x *= aspect;
+                
+                float r = length(p);
+                // Concave Pincushion Displacement (negative k pulls the edges inward, pushing center backwards)
+                float k = -0.25; 
+                vec2 dist_p = p * (1.0 + k*r*r);
+                dist_p.x /= aspect;
+                
+                // Subtract u_off to reverse WebGL UV sampling coordinate system to match strictly with DOM CSS pixel translation
+                vec2 base_uv = dist_p + 0.5 - u_off;
+                
+                // Physically Based Chromatic Edge Tearing
+                float ca = 0.035 * r * r; 
+                vec2 uvR = base_uv * (1.0 - ca) + (ca * 0.5);
+                vec2 uvG = base_uv;
+                vec2 uvB = base_uv * (1.0 + ca) - (ca * 0.5);
+                
+                float r_col = texture2D(u_img, cover(uvR, u_res, u_imgRes)).r;
+                float g_col = texture2D(u_img, cover(uvG, u_res, u_imgRes)).g;
+                float b_col = texture2D(u_img, cover(uvB, u_res, u_imgRes)).b;
+                
+                // Shallow Hardware Vignette (corners now only drop to max 40% darkness rather than pitch black)
+                float dark = smoothstep(0.4, 1.0, r);
+                vec3 final_color = vec3(r_col, g_col, b_col) * (1.0 - dark * 0.45);
+                
+                gl_FragColor = vec4(final_color, 1.0);
+            }
+        `;
+        const createShader = (t, s) => {
+            const sh = gl.createShader(t); gl.shaderSource(sh, s); gl.compileShader(sh); return sh;
+        };
+        const prg = gl.createProgram(); 
+        gl.attachShader(prg, createShader(gl.VERTEX_SHADER, vsSrc)); 
+        gl.attachShader(prg, createShader(gl.FRAGMENT_SHADER, fsSrc)); 
+        gl.linkProgram(prg); gl.useProgram(prg);
+        
+        const buf = gl.createBuffer(); 
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf); 
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+        const loc = gl.getAttribLocation(prg, "p"); 
+        gl.enableVertexAttribArray(loc); 
+        gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+        const tex = gl.createTexture();
+        const img = new Image();
+        img.src = '/assets/default/DefaultPage.jpg';
+        
+        let cx=0, cy=0;
+        window.updateWebGLOffset = (x, y) => { cx = x; cy = y; };
+
+        img.onload = () => {
+            gl.bindTexture(gl.TEXTURE_2D, tex);
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            
+            const uRes = gl.getUniformLocation(prg, "u_res");
+            const uImgRes = gl.getUniformLocation(prg, "u_imgRes");
+            const uOff = gl.getUniformLocation(prg, "u_off");
+
+            const render = () => {
+                const w = cvs.clientWidth; const h = cvs.clientHeight;
+                if(cvs.width !== w || cvs.height !== h) { cvs.width = w; cvs.height = h; }
+                gl.viewport(0, 0, w, h);
+                gl.uniform2f(uRes, w, h);
+                gl.uniform2f(uImgRes, img.width, img.height);
+                gl.uniform2f(uOff, cx/w, cy/h);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                requestAnimationFrame(render);
+            };
+            render();
+        };
+      }
+      initExperimentalWebGL(document.getElementById('webgl-canvas'));
+
+    });
+  </script>
 </BaseLayout>
