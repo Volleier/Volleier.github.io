@@ -1,0 +1,14 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlogList from '../../components/ui/intro/BlogList.astro';
+import { getAllBlogPosts } from '../../domain/intro/queries';
+
+const posts = await getAllBlogPosts();
+---
+
+<BaseLayout title="Intro" description="Articles list">
+  <main class="max-w-4xl mx-auto py-8 px-4">
+    <h1 class="sr-only">Intro</h1>
+    <BlogList posts={posts} />
+  </main>
+</BaseLayout>
