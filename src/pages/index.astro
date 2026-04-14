@@ -101,6 +101,12 @@ import '../styles/pages/index.scss';
       const coordX = document.getElementById('coord-x');
       const coordY = document.getElementById('coord-y');
 
+      // Cinematic FLIP Event Listener Bridge
+      document.addEventListener('LoadingSequenceMorph', () => {
+        const mainLogo = document.querySelector('.main-logo');
+        if (mainLogo) mainLogo.classList.add('sync-reveal');
+      });
+
       window.addEventListener('mousemove', (e) => {
         if (!container) return;
         

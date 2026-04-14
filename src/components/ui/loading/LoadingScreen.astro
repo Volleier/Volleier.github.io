@@ -71,7 +71,9 @@ import '../../../styles/components/loading-screen.scss';
             <div class="name-content">
                 <div class="trapezoid-bg"></div>
                 <div class="name-images">
-                    <img src="/assets/loading/PengLaiSiShaoXiao.png" alt="蓬莱寺劭鸮" class="name-zh" />
+                    <div class="name-zh-wrapper" style="position: relative; display: inline-block;">
+                        <img src="/assets/loading/PengLaiSiShaoXiao.png" alt="蓬莱寺劭鸮" class="name-zh" />
+                    </div>
                     <!-- Broken White Line -->
                     <div class="white-separator-container">
                         <div class="white-separator"></div>
@@ -86,14 +88,97 @@ import '../../../styles/components/loading-screen.scss';
 <script>
     function startLoadingTimer() {
         const loadingScreen = document.getElementById('loading-screen');
-        if (!loadingScreen) return;
+        const nameZh = document.querySelector('.name-zh');
+        if (!loadingScreen || !nameZh) return;
 
         setTimeout(() => {
-            loadingScreen.classList.add('fade-out');
+            /* PHASE 1: TARGETING CROSSHAIR FROM EDGES INWARD */
+            const nameWrapper = document.querySelector('.name-zh-wrapper');
+            if (nameWrapper) {
+                
+                const lockLineHLeft = document.createElement('div');
+                const lockLineHRight = document.createElement('div');
+                const lockLineVTop = document.createElement('div');
+                const lockLineVBottom = document.createElement('div');
+
+                lockLineHLeft.className = 'cinematic-lock-line line-h-left';
+                lockLineHRight.className = 'cinematic-lock-line line-h-right';
+                lockLineVTop.className = 'cinematic-lock-line line-v-top';
+                lockLineVBottom.className = 'cinematic-lock-line line-v-bottom';
+                
+                // Insert lines around the wrapper
+                nameWrapper.appendChild(lockLineHLeft);
+                nameWrapper.appendChild(lockLineHRight);
+                nameWrapper.appendChild(lockLineVTop);
+                nameWrapper.appendChild(lockLineVBottom);
+                
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        lockLineHLeft.classList.add('fire'); 
+                        lockLineHRight.classList.add('fire');
+                        lockLineVTop.classList.add('fire');
+                        lockLineVBottom.classList.add('fire');
+                    }, 20);
+                });
+            }
+
+            /* PHASE 2: DETACH AND TRANSLATE */
             setTimeout(() => {
-                loadingScreen.style.display = 'none';
-            }, 800);
-        }, 3000);
+                const rect = nameZh.getBoundingClientRect();
+                
+                const flightWrapper = document.createElement('div');
+                flightWrapper.className = 'flight-wrapper';
+                // Lock extremely exact physical coordinates
+                flightWrapper.style.top = `${rect.top}px`;
+                flightWrapper.style.left = `${rect.left}px`;
+                flightWrapper.style.width = `${rect.width}px`;
+                flightWrapper.style.height = `${rect.height}px`;
+
+                const flyImg = document.createElement('img');
+                flyImg.src = (nameZh as HTMLImageElement).src;
+                flyImg.className = 'fly-img';
+                
+                const flyHLeft = document.createElement('div'); flyHLeft.className = 'fly-lock line-h-left';
+                const flyHRight = document.createElement('div'); flyHRight.className = 'fly-lock line-h-right';
+                const flyVTop = document.createElement('div'); flyVTop.className = 'fly-lock line-v-top';
+                const flyVBottom = document.createElement('div'); flyVBottom.className = 'fly-lock line-v-bottom';
+                
+                flightWrapper.appendChild(flyImg);
+                flightWrapper.appendChild(flyHLeft);
+                flightWrapper.appendChild(flyHRight);
+                flightWrapper.appendChild(flyVTop);
+                flightWrapper.appendChild(flyVBottom);
+                document.body.appendChild(flightWrapper);
+
+                // Disintegration event clears all underlying loading noise and hides original block globally
+                loadingScreen.classList.add('cinematic-disintegrate');
+
+                // Force browser reflow to register fixed coordinate state before applying transition transformation
+                void flightWrapper.offsetWidth;
+
+                // Index center calculation
+                const destLeft = window.innerWidth / 2 - rect.width / 2;
+                const destTop = window.innerHeight / 2 - rect.height / 2;
+                
+                // Fly
+                flightWrapper.style.transform = `translate(${destLeft - rect.left}px, ${destTop - rect.top}px)`;
+
+                /* PHASE 3: MORPH TO THEME */
+                setTimeout(() => {
+                    flightWrapper.classList.add('morph-fade');
+                    document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
+                    
+                    /* CLEANUP */
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        flightWrapper.remove();
+                    }, 600); // 0.6s crossfade tolerance
+
+                }, 1000); // 1.0s flight transition travel time
+
+            }, 600); // 0.6s to let the targeting lines burst out first
+
+        }, 3000); // Wait 3.0s total loading bar time
     }
 
     startLoadingTimer();

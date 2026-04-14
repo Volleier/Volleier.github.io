@@ -358,6 +358,13 @@
     object-fit: contain;
     transform: translate(var(--logo-x, 0px), var(--logo-y, 0px));
 
+    /* Cinematic FLIP Wait State */
+    opacity: 0;
+    transition: opacity 0.6s ease-in;
+    &.sync-reveal {
+      opacity: 1;
+    }
+
     @media (max-width: 1024px) {
       width: 540px;
     }
