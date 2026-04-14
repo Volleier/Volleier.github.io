@@ -4,7 +4,8 @@ const {
   description = '', 
   ogImage = '',
   showNav = true,
-  showFooter = true
+  showFooter = true,
+  showLoading = false
 } = Astro.props;
 import '../styles/global.css';
 import Nav from '../components/ui/common/Nav.astro';
@@ -23,7 +24,7 @@ import LoadingScreen from '../components/ui/loading/LoadingScreen.astro';
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
   </head>
   <body class="min-h-screen flex flex-col">
-    <LoadingScreen />
+    {showLoading && <LoadingScreen />}
     {showNav && <Nav />}
     <main class="flex-grow">
       <slot />
