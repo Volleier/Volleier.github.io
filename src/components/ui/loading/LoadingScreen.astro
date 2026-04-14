@@ -6,6 +6,39 @@ import '../../../styles/components/loading-screen.scss';
 <div id="loading-screen" class="loading-overlay">
     <!-- Hexagonal Background Grid -->
     <div class="hex-grid-container"></div>
+
+    <!-- Rich Background Decorations -->
+    <div class="hud-decorations">
+      <!-- 1. Corner Brackets -->
+      <div class="hud-bracket top-left"></div>
+      <div class="hud-bracket bottom-right"></div>
+      
+      <!-- 2. Warning Tape -->
+      <div class="hud-warning-tape"></div>
+      
+      <!-- 3. Giant Outline Circles / Radars -->
+      <div class="hud-circle-large"></div>
+      <div class="hud-circle-small"></div>
+      
+      <!-- 4. System Boot Data Text -->
+      <div class="hud-data-column">
+        <div>SYS.INITIALIZATION</div>
+        <div>V_CORE_LOAD: TRUE</div>
+        <div>MEMORY_CHECK... OK</div>
+        <div>OVERRIDE_AUTH: PENDING</div>
+        <div>AWAITING_INPUT_SEC</div>
+      </div>
+      
+      <!-- 5. Dotted Technical Grid Patches -->
+      <div class="hud-dot-grid"></div>
+      
+      <!-- 6. Target Crosshairs -->
+      <div class="hud-crosshair center-left"></div>
+      <div class="hud-crosshair bottom-center"></div>
+
+      <!-- 7. Abstract Vertical Barcodes / Rectangles -->
+      <div class="hud-barcode"></div>
+    </div>
     
     <!-- Background Decorative Lines -->
     <div class="decor-line h-line-top"></div>

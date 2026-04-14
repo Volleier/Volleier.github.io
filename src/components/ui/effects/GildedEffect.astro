@@ -114,8 +114,8 @@ const { zIndex = 1 } = Astro.props;
           vec2 res = u_resolution.xy;
           float aspect = res.x / res.y;
           
-          // EVEN MORE LOOSE: Further reduced scale to zoom in more
-          vec2 p = vec2(vUv.x * min(aspect, 4.0), vUv.y) * 0.5; 
+          // ENLARGED FLUID: Zooming deeply into the UV space
+          vec2 p = vec2(vUv.x * min(aspect, 4.0), vUv.y) * 0.08; 
 
           vec2 q = vec2(fbm(vec3(p, t)), fbm(vec3(p + vec2(1.0), t)));
           vec2 r = vec2(fbm(vec3(p + 3.0 * q + vec2(1.7, 9.2), t * 0.5)), fbm(vec3(p + 3.0 * q + vec2(8.3, 2.8), t * 0.5)));
