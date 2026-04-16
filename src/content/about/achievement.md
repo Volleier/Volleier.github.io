@@ -3,8 +3,8 @@ order: 4
 tag: "04_ACHIEVEMENT"
 heading: "荣誉与成果 / ARCHIVE"
 accent: "gold"
-x: 680
-y: 800
+x: 1664
+y: 984
 w: 20
 className: "achievement"
 ---

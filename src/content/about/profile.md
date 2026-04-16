@@ -3,8 +3,8 @@ order: 1
 tag: "01_PROFILE"
 heading: "身份识别 / PROFILE"
 accent: "cyan"
-x: 240
-y: 180
+x: 800
+y: 120
 w: 14
 className: "profile-card"
 ---

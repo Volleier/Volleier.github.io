@@ -83,6 +83,7 @@ const renderedCards = await Promise.all(
         armed: false,
         holdMs: 160,
         holdTimer: null,
+        wasDragging: false,
       };
 
       const pan = {
@@ -161,8 +162,6 @@ const renderedCards = await Promise.all(
 
         const card = target.closest('[data-card]');
         if (!card || !(card instanceof HTMLElement)) return;
-        const interactive = target.closest('a, button, input, textarea, select, label');
-        if (interactive) return;
 
         drag.card = card;
         drag.pointerId = ev.pointerId;
@@ -175,8 +174,9 @@ const renderedCards = await Promise.all(
         drag.dragging = false;
         drag.mayDrag = true;
         drag.armed = false;
+        drag.wasDragging = false;
 
-        card.setPointerCapture(ev.pointerId);
+        // Note: card.setPointerCapture is moved to onPointerMove to avoid interfering with 'click' events for links.
 
         drag.holdTimer = window.setTimeout(() => {
           if (!drag.mayDrag || !drag.card || drag.pointerId !== ev.pointerId || drag.dragging) return;
@@ -213,6 +213,8 @@ const renderedCards = await Promise.all(
         if (!drag.dragging) {
           clearHoldTimer();
           drag.dragging = true;
+          drag.wasDragging = true;
+          drag.card.setPointerCapture(ev.pointerId);
           root.classList.add('is-dragging-card');
           drag.card.classList.remove('is-armed');
           drag.card.classList.add('is-dragging');
@@ -288,6 +290,13 @@ const renderedCards = await Promise.all(
       viewport.addEventListener('pointermove', onPointerMove, { passive: false });
       viewport.addEventListener('pointerup', onPointerUp);
       viewport.addEventListener('pointercancel', onPointerUp);
+      viewport.addEventListener('click', (ev) => {
+        if (drag.wasDragging) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          drag.wasDragging = false;
+        }
+      }, { capture: true });
       viewport.addEventListener('wheel', onWheel, { passive: false });
       viewport.addEventListener('dragstart', (ev) => ev.preventDefault());
       viewport.addEventListener('mouseenter', () => {

@@ -3,8 +3,8 @@ order: 2
 tag: "02_CORE_PROTOCOL"
 heading: "核心协议 / CORE"
 accent: "magenta"
-x: 680
-y: 140
+x: 1160
+y: 120
 w: 20
 className: "primary"
 ---
