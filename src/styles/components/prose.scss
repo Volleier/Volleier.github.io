@@ -1,0 +1,20 @@
+/* Basic prose adjustments for article content */
+.prose {
+  color: var(--color-text);
+
+  h1, h2, h3 {
+    color: var(--color-text);
+  }
+
+  p {
+    line-height: 1.8;
+  }
+
+  a {
+    color: var(--color-primary);
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

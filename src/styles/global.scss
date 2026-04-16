@@ -1,7 +1,7 @@
 /* Import design tokens and component styles */
-@import "./tokens.css";
-@import "./components/glass.css";
-@import "./components/prose.css";
+@use "./tokens.scss" as *;
+@use "./components/glass.scss";
+@use "./components/prose.scss";
 
 @tailwind base;
 @tailwind components;
