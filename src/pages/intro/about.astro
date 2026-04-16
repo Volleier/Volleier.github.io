@@ -2,7 +2,7 @@
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getAboutCards } from '../../domain/about/queries';
-import '../../styles/pages/about.scss';
+import '../../styles/components/pages/about.scss';
 
 const cards = await getAboutCards();
 const renderedCards = await Promise.all(
