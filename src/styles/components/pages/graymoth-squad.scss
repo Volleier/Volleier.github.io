@@ -1,3 +1,5 @@
+@use "../../abstracts/patterns" as *;
+
 .gm-container {
   position: fixed;
   inset: 0;
@@ -14,16 +16,9 @@
   background-position: center;
   overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
-
-  /* HUD elements */
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 40px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    pointer-events: none;
-  }
 }
+
+@include industrial-serifs($inset: 40px, $color: rgba(255, 255, 255, 0.05), $z-index: 40);
 
 .gm-content {
   position: relative;

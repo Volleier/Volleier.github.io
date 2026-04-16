@@ -1,3 +1,5 @@
+@use "../../abstracts/patterns" as *;
+
 :root {
   --tech-cyan: #00ffcc;
   --tech-orange: #ff5500;
@@ -17,6 +19,27 @@
   background-color: #1a1a1a; 
   overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 50px;
+    z-index: 14;
+    pointer-events: none;
+    /* Thick geometric L-brackets on the 4 corners */
+    background: 
+      linear-gradient(to right, rgba(255,255,255,0.4) 30px, transparent 30px) top left / 100% 3px no-repeat,
+      linear-gradient(to bottom, rgba(255,255,255,0.4) 30px, transparent 30px) top left / 3px 100% no-repeat,
+      
+      linear-gradient(to left, rgba(255,255,255,0.4) 30px, transparent 30px) top right / 100% 3px no-repeat,
+      linear-gradient(to bottom, rgba(255,255,255,0.4) 30px, transparent 30px) top right / 3px 100% no-repeat,
+      
+      linear-gradient(to right, rgba(255,255,255,0.4) 30px, transparent 30px) bottom left / 100% 3px no-repeat,
+      linear-gradient(to top, rgba(255,255,255,0.4) 30px, transparent 30px) bottom left / 3px 100% no-repeat,
+      
+      linear-gradient(to left, rgba(255,255,255,0.4) 30px, transparent 30px) bottom right / 100% 3px no-repeat,
+      linear-gradient(to top, rgba(255,255,255,0.4) 30px, transparent 30px) bottom right / 3px 100% no-repeat;
+  }
 
   &::after {
     content: '';
@@ -117,40 +140,10 @@
   50%, 100% { opacity: 0; }
 }
 
-/* Edge Graphic Design Details */
-.index-container::before {
-  content: '';
-  position: absolute;
-  inset: 50px;
-  z-index: 14;
-  pointer-events: none;
-  /* Thick geometric L-brackets on the 4 corners */
-  background: 
-    linear-gradient(to right, rgba(255,255,255,0.4) 30px, transparent 30px) top left / 100% 3px no-repeat,
-    linear-gradient(to bottom, rgba(255,255,255,0.4) 30px, transparent 30px) top left / 3px 100% no-repeat,
-    
-    linear-gradient(to left, rgba(255,255,255,0.4) 30px, transparent 30px) top right / 100% 3px no-repeat,
-    linear-gradient(to bottom, rgba(255,255,255,0.4) 30px, transparent 30px) top right / 3px 100% no-repeat,
-    
-    linear-gradient(to right, rgba(255,255,255,0.4) 30px, transparent 30px) bottom left / 100% 3px no-repeat,
-    linear-gradient(to top, rgba(255,255,255,0.4) 30px, transparent 30px) bottom left / 3px 100% no-repeat,
-    
-    linear-gradient(to left, rgba(255,255,255,0.4) 30px, transparent 30px) bottom right / 100% 3px no-repeat,
-    linear-gradient(to top, rgba(255,255,255,0.4) 30px, transparent 30px) bottom right / 3px 100% no-repeat;
-}
-
 /* 4. Restored Original Serifs with Extra Detail */
+@include industrial-serifs($inset: 60px, $color: rgba(255, 255, 255, 0.1), $z-index: 15);
+
 .serif {
-  position: absolute;
-  background-color: rgba(255, 255, 255, 0.1);
-  z-index: 15;
-  pointer-events: none;
-
-  &-top { top: 60px; left: 0; right: 0; height: 1px; }
-  &-bottom { bottom: 60px; left: 0; right: 0; height: 1px; }
-  &-left { left: 60px; top: 0; bottom: 0; width: 1px; }
-  &-right { right: 60px; top: 0; bottom: 0; width: 1px; }
-
   /* Timeline Marker Graphics */
   .time-marker-container {
     position: absolute;
@@ -161,6 +154,7 @@
     flex-direction: column;
     align-items: center;
     pointer-events: none;
+    
     .time-label {
       font-family: monospace;
       font-size: 8px;
@@ -202,8 +196,6 @@
   &-right::after { top: 60px; left: -1px; }
 
   @media (max-width: 640px) {
-    &-top, &-bottom { top: 30px; bottom: 30px; }
-    &-left, &-right { left: 30px; right: 30px; }
     &-top::after { left: 30px; }
     &-bottom::after { right: 30px; }
     &-left::after { bottom: 30px; }
@@ -314,14 +306,12 @@
   }
 
   .decor-bracket {
-    position: absolute;
+    @include tech-bracket($size: 12px, $border-color: rgba(0, 255, 204, 0.3));
     right: -10px;
     bottom: 25%;
-    width: 12px;
     height: 40px;
-    border-top: 2px solid rgba(0, 255, 204, 0.3);
-    border-right: 2px solid rgba(0, 255, 204, 0.3);
-    border-bottom: 2px solid rgba(0, 255, 204, 0.3);
+    border-left: none;
+
     &::before {
       content: '';
       position: absolute;
@@ -365,13 +355,8 @@
       opacity: 1;
     }
 
-    @media (max-width: 1024px) {
-      width: 540px;
-    }
-
-    @media (max-width: 640px) {
-      width: 320px;
-    }
+    @media (max-width: 1024px) { width: 540px; }
+    @media (max-width: 640px) { width: 320px; }
   }
 }
 
@@ -390,7 +375,6 @@
   -webkit-backdrop-filter: blur(12px) saturate(150%);
   border: 1px solid var(--tech-border-dark);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  /* Slightly more conventional tech cut */
   clip-path: polygon(3% 0, 100% 0, 100% 85%, 97% 100%, 0 100%, 0 15%);
 
   @media (max-width: 1024px) { gap: 20px; }
@@ -417,7 +401,6 @@
   transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   overflow: hidden;
 
-  /* Subtle background pattern */
   &::before {
     content: '';
     position: absolute;
@@ -429,22 +412,14 @@
   }
 
   .btn-bracket {
-    position: absolute;
+    @include tech-bracket($size: 12px, $border-color: var(--tech-border-light));
     top: 0;
     bottom: 0;
-    width: 12px;
-    border: 1px solid var(--tech-border-light);
-    transition: all 0.3s;
+    height: auto;
     z-index: 2;
 
-    &-left {
-      left: 0;
-      border-right: none;
-    }
-    &-right {
-      right: 0;
-      border-left: none;
-    }
+    &-left { left: 0; border-right: none; }
+    &-right { right: 0; border-left: none; }
   }
 
   .btn-content {
@@ -466,7 +441,6 @@
     transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
   }
 
-  /* Animated Accent Scanning Line */
   .tech-accent {
     position: absolute;
     bottom: 0;
@@ -479,24 +453,16 @@
     z-index: 3;
   }
 
-  /* Hover States - Cleaned up without glitch */
   &:hover {
     background-color: rgba(255, 255, 255, 0.05);
-
     &::before { opacity: 1; }
-
     .btn-bracket {
       border-color: var(--tech-cyan);
       &-left { left: 4px; }
       &-right { right: 4px; }
     }
-
     .tech-tag { color: var(--tech-cyan); }
-    
-    .tech-label {
-      transform: scale(1.05);
-    }
-
+    .tech-label { transform: scale(1.05); }
     .tech-accent { left: 100%; }
   }
 }

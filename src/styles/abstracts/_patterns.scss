@@ -1,0 +1,28 @@
+// Shared Industrial/Tech UI Patterns
+
+@mixin industrial-serifs($inset: 60px, $color: rgba(255, 255, 255, 0.1), $z-index: 15) {
+  .serif {
+    position: absolute;
+    background-color: $color;
+    z-index: $z-index;
+    pointer-events: none;
+
+    &-top { top: $inset; left: 0; right: 0; height: 1px; }
+    &-bottom { bottom: $inset; left: 0; right: 0; height: 1px; }
+    &-left { left: $inset; top: 0; bottom: 0; width: 1px; }
+    &-right { right: $inset; top: 0; bottom: 0; width: 1px; }
+
+    @media (max-width: 640px) {
+      &-top, &-bottom { top: calc($inset / 2); bottom: calc($inset / 2); }
+      &-left, &-right { left: calc($inset / 2); right: calc($inset / 2); }
+    }
+  }
+}
+
+@mixin tech-bracket($size: 12px, $border-color: rgba(255, 255, 255, 0.3)) {
+  position: absolute;
+  width: $size;
+  height: $size;
+  border: 1px solid $border-color;
+  pointer-events: none;
+}

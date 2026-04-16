@@ -1,3 +1,5 @@
+@use "../abstracts/patterns" as *;
+
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -15,17 +17,39 @@
     pointer-events: none;
   }
 
-  /* Hexagonal Background Grid - Premium High-End Aesthetic */
+  &.cinematic-disintegrate {
+    .name-block-outer { opacity: 0; }
+    
+    .badge-container {
+      transform: translateX(-10vw) scale(1.1);
+      filter: blur(20px);
+      opacity: 0;
+      transition: all 0.8s cubic-bezier(0.8, 0, 0.2, 1);
+    }
+    .status-bar-container {
+      transform: translateY(20vh);
+      opacity: 0;
+      transition: all 0.6s ease-in;
+    }
+    .hud-decorations, .hex-grid-container {
+      transform: scale(1.5);
+      opacity: 0;
+      transition: all 0.7s cubic-bezier(0.8, 0, 0.2, 1);
+    }
+    background-color: transparent !important;
+    transition: background-color 1.2s ease;
+  }
+
+  /* Hexagonal Background Grid */
   .hex-grid-container {
     position: absolute;
-    inset: -5% -5%; /* Extra bleed for floating animation */
+    inset: -5% -5%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.5; /* Enhanced visibility to be distinctly noticeable */
+    opacity: 0.5;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='%23ffffff'%3E%3Cpath d='M0 0 L20 0 L20 0.3 L1 1 L0 1 Z' /%3E%3Cpath d='M40 0 L20 0 L20 0.3 L39 1 L40 1 Z' /%3E%3Cpath d='M0 0 L0 20 L0.3 20 L1 1 L1 0 Z' /%3E%3Cpath d='M0 40 L0 20 L0.3 20 L1 39 L1 40 Z' /%3E%3Ccircle cx='0' cy='0' r='1.5' /%3E%3Ccircle cx='40' cy='0' r='1.5' /%3E%3Ccircle cx='0' cy='40' r='1.5' /%3E%3Ccircle cx='40' cy='40' r='1.5' /%3E%3C/g%3E%3C/svg%3E");
     background-size: 40px 40px;
     
-    /* Vignette Mask - Fades out towards screen edges */
     -webkit-mask-image: radial-gradient(circle at 50% 50%, black 15%, transparent 85%);
     mask-image: radial-gradient(circle at 50% 50%, black 15%, transparent 85%);
     
@@ -34,38 +58,18 @@
   }
 }
 
-@keyframes hexFloating {
-  0% { transform: translate(0, 0) rotate(0deg); }
-  25% { transform: translate(1%, 1%) rotate(0.2deg); }
-  50% { transform: translate(0, 2%) rotate(0.5deg); }
-  75% { transform: translate(-1%, 1%) rotate(0.2deg); }
-  100% { transform: translate(0, 0) rotate(0deg); }
-}
-
-@keyframes rotateSlow {
-  from { transform: rotate(-30deg); }
-  to { transform: rotate(180deg); } /* Powerful sweeping half-circle arc */
-}
-
-@keyframes tapeFlow {
-  to { background-position: -42px 0; }
-}
-
-/* Rich HUD Decorations (Injected Layer) */
+/* HUD Decorations */
 .hud-decorations {
   position: absolute;
   inset: 0;
   pointer-events: none;
   z-index: 1; 
 
-  /* 1. Corner Brackets */
   .hud-bracket {
-    position: absolute;
-    width: 15vw;
-    height: 15vw;
+    @include tech-bracket($size: 15vw, $border-color: rgba(255, 255, 255, 0.1));
     max-width: 200px;
     max-height: 200px;
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-width: 2px;
     
     &.top-left {
       top: 30px;
@@ -100,7 +104,6 @@
     }
   }
 
-  /* 2. Warning Tape */
   .hud-warning-tape {
     position: absolute;
     bottom: -10vw;
@@ -119,22 +122,20 @@
     animation: tapeFlow 2s linear infinite;
   }
 
-  /* 3. Giant Outline Circles */
   .hud-circle-large {
     position: absolute;
     bottom: -200px;
     right: -100px;
     width: 600px;
     height: 600px;
-    border: 2px solid rgba(255, 255, 255, 0.08); /* Increased visibility */
+    border: 2px solid rgba(255, 255, 255, 0.08);
     border-radius: 50%;
     &::after {
       content: '';
       position: absolute;
       inset: 20px;
-      border: 2px dashed rgba(0, 255, 157, 0.4); /* Much thicker bright cyan dash */
+      border: 2px dashed rgba(0, 255, 157, 0.4);
       border-radius: 50%;
-      /* Exactly 3s to match the loading bar timer */
       animation: rotateSlow 3s cubic-bezier(0.1, 0.7, 0.1, 1) forwards; 
     }
   }
@@ -149,19 +150,16 @@
     border-radius: 50%;
   }
 
-  /* 4. Boot Data Text */
   .hud-data-column {
     position: absolute;
     left: 40px;
-    top: 80px; /* Moved to safe Top-Left void */
+    top: 80px;
     font-family: monospace;
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.5); /* Clearer text */
+    color: rgba(255, 255, 255, 0.5);
     line-height: 1.8;
     letter-spacing: 2px;
     text-transform: uppercase;
-    
-    /* From top to bottom, line by line reveal (5 lines total) */
     animation: dataReveal 0.6s steps(5, end) forwards;
     white-space: nowrap;
     overflow: hidden;
@@ -174,7 +172,6 @@
     }
   }
 
-  /* 5. Dotted Grid Patch */
   .hud-dot-grid {
     position: absolute;
     right: 5vw;
@@ -188,12 +185,11 @@
     animation: pulseGrid 4s infinite alternate;
   }
 
-  /* 6. Target Crosshairs */
   .hud-crosshair {
     position: absolute;
     width: 40px;
     height: 40px;
-    border: 1px solid rgba(255, 255, 255, 0.3); /* Clearer border */
+    border: 1px solid rgba(255, 255, 255, 0.3);
     &::before, &::after {
       content: '';
       position: absolute;
@@ -202,14 +198,16 @@
     &::before { top: 50%; left: -10px; right: -10px; height: 1px; }
     &::after { left: 50%; top: -10px; bottom: -10px; width: 1px; }
 
-    &.center-left { top: 20px; left: 40vw; } /* Safe Top-Center */
-    &.bottom-center { bottom: 60px; right: 20vw; width: 20px; height: 20px; border-color: rgba(0,255,204,0.5); } 
+    &.center-left { top: 20px; left: 40vw; }
+    &.bottom-center { 
+      bottom: 60px; right: 20vw; width: 20px; height: 20px; 
+      border-color: rgba(0,255,204,0.5); 
+    } 
   }
 
-  /* 7. Barcodes */
   .hud-barcode {
     position: absolute;
-    top: 55vh; /* Moved down below the Name Block */
+    top: 55vh;
     right: 40px;
     width: 40px;
     height: 180px;
@@ -228,34 +226,13 @@
   }
 }
 
-/* Supplemental Animation Keyframes for HUD */
-@keyframes dataReveal {
-  0% { clip-path: inset(0 0 100% 0); }
-  100% { clip-path: inset(0 0 0 0); }
-}
-
-@keyframes pulseGrid {
-  0% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-
-@keyframes crosshairDeploy {
-  0% { transform: scale(0.2) rotate(-90deg); opacity: 0; }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
-}
-
-@keyframes barcodeScan {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 100px; }
-}
-
 /* Decorative Lines */
 .decor-line {
   position: absolute;
   background-color: var(--tech-border);
 }
 
-/* Status Bar Area (Bottom) */
+/* Status Bar Area */
 .status-bar-container {
   position: absolute;
   bottom: 15%;
@@ -268,7 +245,7 @@
   .loading-bar {
     width: 78%;
     height: 100%;
-    background-color: #000; /* Solid background for the effect to shine on */
+    background-color: #000;
     position: relative;
     overflow: hidden;
   }
@@ -279,8 +256,6 @@
     background-color: var(--tech-magenta);
     box-shadow: 0 0 15px var(--tech-magenta), 0 0 30px var(--tech-magenta);
     position: relative;
-    
-    /* Neon tracking dot manually removed per user request */
   }
 }
 
@@ -288,7 +263,7 @@
 .badge-container {
   position: absolute;
   bottom: 4%;
-  left: 0; /* Pushed to the far left edge */
+  left: 0;
   width: min(70vw, 1200px);
   z-index: 10;
   pointer-events: none;
@@ -297,7 +272,6 @@
     width: 100%;
     height: auto;
     display: block;
-    /* Imposing cinematic rim light drop shadow */
     filter: drop-shadow(0 0 25px rgba(0, 255, 157, 0.4)) drop-shadow(0 0 60px rgba(0, 0, 0, 0.8));
     position: relative;
     z-index: 2;
@@ -306,7 +280,7 @@
   .badge-accent {
     position: absolute;
     inset: 0;
-    left: 12px; /* Shifted right for the "stroke" effect */
+    left: 12px;
     z-index: 1;
     background-color: #00ff9d;
     -webkit-mask-image: url('/assets/loading/Volleier-Logo.png');
@@ -315,22 +289,18 @@
     mask-size: contain;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
-    /* "缂佺偓瀵ч埀顑啫顫ｆ繛? Linear Burn simulation */
     mix-blend-mode: color-burn;
     opacity: 0.9;
   }
 
-  @media (max-width: 1200px) {
-    width: 85vw;
-  }
-
+  @media (max-width: 1200px) { width: 85vw; }
   @media (max-width: 768px) {
     width: 95vw;
     bottom: 8%;
   }
 }
 
-/* Name Block (Top Right) - Detailed Geometry */
+/* Name Block */
 .name-block-outer {
   position: absolute;
   top: 0;
@@ -355,28 +325,17 @@
         height: 38px;
         position: relative;
 
-        &.hollow {
-          border: 4px solid var(--tech-border);
-        }
+        &.hollow { border: 4px solid var(--tech-border); }
 
         &.solid-magenta.large-square {
-          /* 3x increase from ~38px is ~114px */
           width: 110px;
           height: 110px;
           background-color: var(--tech-magenta);
           box-shadow: 20px 20px 0 rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 0, 128, 0.3);
-          /* Shifted left to properly emphasize the slant area */
           transform: translate(20px, 10px);
 
-          @media (max-width: 1200px) {
-            width: 80px;
-            height: 80px;
-          }
-
-          @media (max-width: 768px) {
-            width: 60px;
-            height: 60px;
-          }
+          @media (max-width: 1200px) { width: 80px; height: 80px; }
+          @media (max-width: 768px) { width: 60px; height: 60px; }
         }
       }
     }
@@ -386,25 +345,15 @@
       padding: 24px 80px 32px 100px;
       min-width: 620px;
 
-      @media (max-width: 1200px) {
-        min-width: 450px;
-        padding-left: 80px;
-      }
-
-      @media (max-width: 768px) {
-        min-width: 320px;
-        padding-left: 60px;
-        padding-top: 15px;
-      }
+      @media (max-width: 1200px) { min-width: 450px; padding-left: 80px; }
+      @media (max-width: 768px) { min-width: 320px; padding-left: 60px; padding-top: 15px; }
 
       .trapezoid-bg {
         position: absolute;
         inset: 0;
         background-color: rgba(5, 7, 10, 0.95);
-        /* 5-Point Polygon with steep slant */
         clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 25% 100%, 0% 45%);
         z-index: -1;
-        /* Technical inner glow border effect via pseudo-element */
         &::after {
           content: '';
           position: absolute;
@@ -422,11 +371,15 @@
         align-items: flex-end;
         gap: 12px;
 
+        .name-zh-wrapper {
+          position: relative;
+          display: inline-block;
+        }
+
         .name-zh {
           height: 96px;
           width: auto;
           display: block;
-
           @media (max-width: 1200px) { height: 72px; }
           @media (max-width: 768px) { height: 48px; }
         }
@@ -435,12 +388,10 @@
           height: 48px;
           width: auto;
           display: block;
-
           @media (max-width: 1200px) { height: 36px; }
           @media (max-width: 768px) { height: 24px; }
         }
 
-        /* Broken White Line Logic */
         .white-separator-container {
           width: 100%;
           display: flex;
@@ -448,7 +399,6 @@
           padding-right: 0;
 
           .white-separator {
-            /* Stops before hitting the left edge/slant */
             width: 82%;
             height: 4px;
             background-color: #fff;
@@ -460,99 +410,78 @@
   }
 }
 
-/* ==============================================================
-   CINEMATIC FLIP TRANSITION LOGIC
-   ============================================================== */
+/* Animations */
+@keyframes hexFloating {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(1%, 1%) rotate(0.2deg); }
+  50% { transform: translate(0, 2%) rotate(0.5deg); }
+  75% { transform: translate(-1%, 1%) rotate(0.2deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
 
-/* Phase 1: Target Locking Lines & Phase 2 Flight Clones */
+@keyframes rotateSlow {
+  from { transform: rotate(-30deg); }
+  to { transform: rotate(180deg); }
+}
+
+@keyframes tapeFlow {
+  to { background-position: -42px 0; }
+}
+
+@keyframes dataReveal {
+  0% { clip-path: inset(0 0 100% 0); }
+  100% { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes pulseGrid {
+  0% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+@keyframes barcodeScan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+/* Cinematic FLIP Logic */
 .cinematic-lock-line, .fly-lock {
-    position: absolute;
-    background: #fff;
-    box-shadow: 0 0 10px #fff;
-    z-index: 50;
-    pointer-events: none;
-    
-    &.cinematic-lock-line {
-        opacity: 0;
-        transition: transform 0.3s cubic-bezier(0.1, 1, 0.1, 1), opacity 0.15s;
-    }
+  position: absolute;
+  background: #fff;
+  box-shadow: 0 0 10px #fff;
+  z-index: 50;
+  pointer-events: none;
+  
+  &.cinematic-lock-line {
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.1, 1, 0.1, 1), opacity 0.15s;
+  }
 
-    &.line-h-left {
-        height: 1px;
-        width: 100vw;
-        right: 100%;
-        top: 50%;
-        margin-right: 15px; /* Stop before hitting the image */
-        &.cinematic-lock-line { transform: translate(-50vw, -50%); }
-        &.cinematic-lock-line.fire, &.fly-lock { transform: translate(0, -50%); opacity: 1; }
-    }
-    &.line-h-right {
-        height: 1px;
-        width: 100vw;
-        left: 100%;
-        top: 50%;
-        margin-left: 15px; /* Stop before hitting the image */
-        &.cinematic-lock-line { transform: translate(50vw, -50%); }
-        &.cinematic-lock-line.fire, &.fly-lock { transform: translate(0, -50%); opacity: 1; }
-    }
-    &.line-v-top {
-        width: 1px;
-        height: 100vh;
-        bottom: 100%;
-        left: 50%;
-        margin-bottom: 5px; /* Stop before hitting the image */
-        &.cinematic-lock-line { transform: translate(-50%, -50vh); }
-        &.cinematic-lock-line.fire, &.fly-lock { transform: translate(-50%, 0); opacity: 1; }
-    }
-    &.line-v-bottom {
-        width: 1px;
-        height: 100vh;
-        top: 100%;
-        left: 50%;
-        margin-top: 5px; /* Stop before hitting the image */
-        &.cinematic-lock-line { transform: translate(-50%, 50vh); }
-        &.cinematic-lock-line.fire, &.fly-lock { transform: translate(-50%, 0); opacity: 1; }
-    }
+  &.line-h-left {
+    height: 1px; width: 100vw; right: 100%; top: 50%; margin-right: 15px;
+    &.cinematic-lock-line { transform: translate(-50vw, -50%); }
+    &.cinematic-lock-line.fire, &.fly-lock { transform: translate(0, -50%); opacity: 1; }
+  }
+  &.line-h-right {
+    height: 1px; width: 100vw; left: 100%; top: 50%; margin-left: 15px;
+    &.cinematic-lock-line { transform: translate(50vw, -50%); }
+    &.cinematic-lock-line.fire, &.fly-lock { transform: translate(0, -50%); opacity: 1; }
+  }
+  &.line-v-top {
+    width: 1px; height: 100vh; bottom: 100%; left: 50%; margin-bottom: 5px;
+    &.cinematic-lock-line { transform: translate(-50%, -50vh); }
+    &.cinematic-lock-line.fire, &.fly-lock { transform: translate(-50%, 0); opacity: 1; }
+  }
+  &.line-v-bottom {
+    width: 1px; height: 100vh; top: 100%; left: 50%; margin-top: 5px;
+    &.cinematic-lock-line { transform: translate(-50%, 50vh); }
+    &.cinematic-lock-line.fire, &.fly-lock { transform: translate(-50%, 0); opacity: 1; }
+  }
 }
 
-/* Phase 2: Flight Wrapper (Appended to Body) */
 .flight-wrapper {
-    position: fixed;
-    z-index: 999999;
-    /* The core flight animation easing */
-    transition: transform 1s cubic-bezier(0.8, 0, 0.2, 1);
-    
-    .fly-img {
-        width: 100%; height: 100%; display: block;
-    }
-    /* Specific fly-lock declarations omitted since they are shared above */
-    &.morph-fade {
-        opacity: 0;
-        transition: opacity 0.6s ease-out;
-    }
-}
-
-/* Phase 2 & 3: Disintegration CSS Overlay */
-.loading-overlay.cinematic-disintegrate {
-    .name-block-outer { opacity: 0; } /* Instantly hide original corner block to prevent duplicates while FLIP clone flies */
-    
-    /* Disperse the background / logo / status bar / decals */
-    .badge-container {
-        transform: translateX(-10vw) scale(1.1);
-        filter: blur(20px);
-        opacity: 0;
-        transition: all 0.8s cubic-bezier(0.8, 0, 0.2, 1);
-    }
-    .status-bar-container {
-        transform: translateY(20vh);
-        opacity: 0;
-        transition: all 0.6s ease-in;
-    }
-    .hud-decorations, .hex-grid-container {
-        transform: scale(1.5);
-        opacity: 0;
-        transition: all 0.7s cubic-bezier(0.8, 0, 0.2, 1);
-    }
-    background-color: transparent !important;
-    transition: background-color 1.2s ease;
+  position: fixed;
+  z-index: 999999;
+  transition: transform 1s cubic-bezier(0.8, 0, 0.2, 1);
+  .fly-img { width: 100%; height: 100%; display: block; }
+  &.morph-fade { opacity: 0; transition: opacity 0.6s ease-out; }
 }

@@ -4,30 +4,18 @@ interface Props {
   zIndex?: number;
 }
 const { zIndex = 1 } = Astro.props;
+import '../../../styles/components/effects/gilded-effect.scss';
 ---
 
-<div class="fluid-container" style={`z-index: ${zIndex};`}>
-  <canvas class="fluid-canvas"></canvas>
+<div class="gilded-effect" style={`z-index: ${zIndex};`}>
+  <canvas class="gilded-effect__canvas"></canvas>
 </div>
 
-<style>
-  .fluid-container {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    overflow: hidden;
-    background-color: #0c0f14;
-  }
-  .fluid-canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-</style>
+
 
 <script>
   function initGildedEffect() {
-    const canvases = document.querySelectorAll('.fluid-canvas') as NodeListOf<HTMLCanvasElement>;
+    const canvases = document.querySelectorAll('.gilded-effect__canvas') as NodeListOf<HTMLCanvasElement>;
     
     canvases.forEach(canvas => {
       if ((canvas as any)._gilded_init) return;
