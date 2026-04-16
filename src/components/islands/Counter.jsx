@@ -8,7 +8,7 @@ export default function Counter() {
         className="px-3 py-1 rounded bg-indigo-600 text-white"
         onClick={() => setCount((c) => c + 1)}
       >
-        点击我 ({count})
+        闁绘劗鎳撻崵顕€骞?({count})
       </button>
     </div>
   );

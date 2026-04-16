@@ -22,7 +22,22 @@ const wikiCollection = defineCollection({
   }),
 });
 
+const aboutCollection = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/about" }),
+  schema: z.object({
+    order: z.number(),
+    tag: z.string(),
+    heading: z.string(),
+    accent: z.enum(["magenta", "cyan", "gold", "white", "transparent"]),
+    x: z.number(),
+    y: z.number(),
+    w: z.number().int().positive().default(14),
+    className: z.string().optional(),
+  }),
+});
+
 export const collections = {
   intro: introCollection,
   wiki: wikiCollection,
+  about: aboutCollection,
 };

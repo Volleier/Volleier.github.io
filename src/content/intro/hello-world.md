@@ -1,20 +1,20 @@
 ---
 title: "Hello World"
 publishDate: 2026-04-10
-description: "示例文章：你好，世界。展示博客内容 schema。"
+description: "Intro 的第一篇测试文章，用于验证 Astro Content Collection。"
 author: "Volleier"
 tags:
-  - 示例
-  - 入门
+  - intro
+  - astro
 ---
 
 # Hello World
 
-这是第一篇示例文章，用于验证内容层与前端渲染工作流。下面是一段示例正文：
+这是 `intro` 栏目的第一篇文章。
 
-欢迎来到我的个人站点，这是一篇用于测试内容管线的文章。
+当前页面由 Astro 内容集合驱动，frontmatter 中的字段会用于列表展示、排序和详情页渲染。
 
-## 小节
+## 接下来
 
-- 这是一个项目示例。
-- 日期字段应被正确解析。
+- 可以继续在 `src/content/intro/` 下添加更多 Markdown 文章。
+- 每篇文章都需要包含 `title / publishDate / description` 这三个必填字段。

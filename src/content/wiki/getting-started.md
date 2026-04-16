@@ -1,15 +1,20 @@
 ---
-title: "入门指南"
+title: "Getting Started"
 lastUpdated: 2026-04-08
-description: "Wiki 入门页面，介绍项目结构与常见操作。"
+description: "Quick start guide for the Wiki section."
 category: "guide"
 ---
 
-# 入门指南
+# Getting Started
 
-这个 Wiki 页面用于记录项目的基础用法和结构说明。
+Welcome to the Wiki area.
 
-## 结构
+## Structure
 
-- `src/content`：Markdown 内容
-- `src/domain`：内容查询与映射
+- `src/content/wiki`: markdown source files
+- `src/domain/wiki`: query and data access logic
+
+## Notes
+
+- Keep frontmatter valid YAML.
+- Ensure required fields match `src/content.config.ts`.

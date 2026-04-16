@@ -1,159 +1,349 @@
 ---
+import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getAboutCards } from '../../domain/about/queries';
 import '../../styles/pages/about.scss';
+
+const cards = await getAboutCards();
+const renderedCards = await Promise.all(
+  cards.map(async (entry) => {
+    const { Content } = await render(entry);
+    return { entry, Content };
+  }),
+);
 ---
+
 <BaseLayout title="About - Volleier" showNav={false} showFooter={false}>
-  <main class="about-container">
-    <!-- Clean Minimal HUD -->
+  <main class="about-container" data-grid-size="24">
+    <div class="canvas-viewport" id="about-canvas">
+      <div class="dot-grid-layer"></div>
+
+      <div class="canvas-content" id="about-canvas-content">
+        {renderedCards.map(({ entry, Content }) => (
+          <article
+            class:list={['info-card', 'about-card', entry.data.className]}
+            data-card
+            data-x={entry.data.x}
+            data-y={entry.data.y}
+            style={`--card-grid-w:${entry.data.w};`}
+          >
+            <div class:list={['card-accent', entry.data.accent]}></div>
+            <header class="card-header">
+              <span class="tag">{entry.data.tag}</span>
+              <h2>{entry.data.heading}</h2>
+            </header>
+            <div class="card-body markdown-body">
+              <Content />
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+
     <div class="serif serif-top"></div>
     <div class="serif serif-bottom"></div>
     <div class="serif serif-left"></div>
     <div class="serif serif-right"></div>
-    
-    <div class="content-grid">
-      <!-- Left Panel: Profile -->
-      <aside class="profile-panel">
-        <div class="profile-card">
-          <div class="avatar-container">
-            <img src="/assets/about/avatar.png" alt="Volleier Avatar" class="avatar-img" />
-            <div class="avatar-accent"></div>
-          </div>
-          
-          <div class="identity-header">
-            <h1 class="subject-name">VOLLEIER</h1>
-            <span class="subject-id">ID.VLR_RESUME_SYNC</span>
-          </div>
-
-          <div class="identity-stats">
-            <div class="stat-item">
-              <span class="label">STATUS.</span>
-              <span class="value cyan">ACTIVE</span>
-            </div>
-            <div class="stat-item">
-              <span class="label">MAIL.</span>
-              <span class="value">Volleiershao@gmail.com</span>
-            </div>
-          </div>
-        </div>
-        
-        <a href="/" class="flat-button">
-          <span class="btn-tag">00</span>
-          <span class="btn-text">RETURN_HOME</span>
-        </a>
-      </aside>
-
-      <!-- Right Panel: Info -->
-      <section class="info-panel">
-        <!-- Bio / Core -->
-        <div class="info-card primary">
-          <div class="card-accent magenta"></div>
-          <header class="card-header">
-            <span class="tag">01_CORE_PROTOCOL</span>
-            <h2>核心协议 / CORE</h2>
-          </header>
-          <div class="card-body">
-            <p>
-              我是 Volleier，一名深耕于<b>虚幻引擎底层架构</b>与<b>人工智能算法</b>的跨界开发者。我主张将严谨的工业逻辑与极简的平面艺术结合，在 `C++` 的高性能世界与 `AI` 的前沿研究中构建未来。目前专注于探索高性能多人联机逻辑与神经渲染技术（NPR）。
-            </p>
-          </div>
-        </div>
-
-        <!-- Skills / Spec -->
-        <div class="info-card">
-          <div class="card-accent cyan"></div>
-          <header class="card-header">
-            <span class="tag">02_TECH_SPEC</span>
-            <h2>技术指标 / SPEC</h2>
-          </header>
-          <div class="card-body skill-list">
-            <div class="skill-row">
-              <div class="skill-name">ENGINE_DEV (UE/C++)</div>
-              <div class="skill-bar-container">
-                <div class="skill-bar" style="width: 95%"></div>
-              </div>
-            </div>
-            <div class="skill-row">
-              <div class="skill-name">AI_ALGO (CV/LLM)</div>
-              <div class="skill-bar-container">
-                <div class="skill-bar" style="width: 90%"></div>
-              </div>
-            </div>
-            <div class="skill-row">
-              <div class="skill-name">ART_TECH (BLENDER)</div>
-              <div class="skill-bar-container">
-                <div class="skill-bar" style="width: 82%"></div>
-              </div>
-            </div>
-            <div class="skill-row">
-              <div class="skill-name">FULL_STACK (JV/TS)</div>
-              <div class="skill-bar-container">
-                <div class="skill-bar" style="width: 88%"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Achievements / Achievement -->
-         <div class="info-card">
-          <div class="card-accent gold"></div>
-          <header class="card-header">
-            <span class="tag">03_ACHIEVEMENT</span>
-            <h2>荣誉与成果 / ARCHIVE</h2>
-          </header>
-          <div class="card-body achievement-list">
-            <div class="achieve-item">
-                <span class="achieve-type">PAPER</span>
-                <p>3x SCI一区论文 (Nature Comm. / Nano Energy)</p>
-            </div>
-            <div class="achieve-item">
-                <span class="achieve-type">AWARD</span>
-                <p>CUSGA 游戏大赛决赛入围</p>
-            </div>
-            <div class="achieve-item">
-                <span class="achieve-type">AWARD</span>
-                <p>吉比特 48h 游戏开发赛 - 最佳潜力奖</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Project / Project -->
-        <div class="info-card">
-          <div class="card-accent white"></div>
-          <header class="card-header">
-            <span class="tag">04_PROJECT_LOG</span>
-            <h2>项目记录 / PROJECT</h2>
-          </header>
-          <div class="card-body project-grid">
-            <div class="project-item">
-                <div class="item-head">BLASTER_TPS</div>
-                <p>基于 UE C++ 的多人联机射击游戏原型 (RPC/GAS)</p>
-            </div>
-            <div class="project-item">
-                <div class="item-head">GAS_CARD_GAME</div>
-                <div class="p">回合制卡牌架构实现，专注技能表现与数据处理</div>
-            </div>
-            <div class="project-item">
-                <div class="item-head">CLOCK_GOBLIN</div>
-                <p>C# 开源软件使用时长追踪分析工具</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Link -->
-        <div class="info-card">
-          <div class="card-accent transparent"></div>
-          <header class="card-header">
-            <span class="tag">05_COMM_LINK</span>
-            <h2>通讯链路 / LINK</h2>
-          </header>
-          <div class="card-body contact-links">
-            <a href="#" class="contact-item">GITHUB.LINK</a>
-            <a href="#" class="contact-item">PIXIV.LINK</a>
-            <a href="#" class="contact-item">PORTFOLIO.SYNC</a>
-          </div>
-        </div>
-
-      </section>
-    </div>
   </main>
+
+  <script is:inline>
+    (() => {
+      const root = document.querySelector('.about-container');
+      const viewport = document.getElementById('about-canvas');
+      const canvas = document.getElementById('about-canvas-content');
+      if (!root || !viewport || !canvas) return;
+
+      const gridSize = Number(root.dataset.gridSize || 24);
+      const cards = Array.from(canvas.querySelectorAll('[data-card]'));
+      const state = {
+        panX: window.innerWidth * 0.2,
+        panY: window.innerHeight * 0.2,
+        scale: 1,
+      };
+
+      const edge = {
+        active: false,
+        mouseX: 0,
+        mouseY: 0,
+        threshold: 72,
+        speed: 18,
+      };
+
+      const drag = {
+        card: null,
+        pointerId: -1,
+        startClientX: 0,
+        startClientY: 0,
+        startWorldX: 0,
+        startWorldY: 0,
+        startX: 0,
+        startY: 0,
+        dragging: false,
+        mayDrag: false,
+        armed: false,
+        holdMs: 160,
+        holdTimer: null,
+      };
+
+      const pan = {
+        active: false,
+        pointerId: -1,
+        startX: 0,
+        startY: 0,
+        startPanX: 0,
+        startPanY: 0,
+        middlePressed: false,
+      };
+
+      const snap = (value) => Math.round(value / gridSize) * gridSize;
+      const clampScale = (v) => Math.min(2.4, Math.max(0.45, v));
+
+      const parseNum = (value, fallback = 0) => {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : fallback;
+      };
+
+      const setCardPos = (card, x, y) => {
+        card.dataset.x = String(x);
+        card.dataset.y = String(y);
+        card.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      };
+
+      const refreshCardMetrics = (card) => {
+        const width = Math.max(gridSize * 8, Math.ceil(card.offsetWidth / gridSize) * gridSize);
+        const height = Math.max(gridSize * 8, Math.ceil(card.scrollHeight / gridSize) * gridSize);
+        card.style.width = `${width}px`;
+        card.style.minHeight = `${height}px`;
+      };
+
+      const render = () => {
+        root.style.setProperty('--pan-x', `${state.panX}`);
+        root.style.setProperty('--pan-y', `${state.panY}`);
+        root.style.setProperty('--zoom', `${state.scale}`);
+        canvas.style.transform = `translate3d(${state.panX}px, ${state.panY}px, 0) scale(${state.scale})`;
+      };
+
+      cards.forEach((card) => {
+        refreshCardMetrics(card);
+        const x = snap(parseNum(card.dataset.x));
+        const y = snap(parseNum(card.dataset.y));
+        setCardPos(card, x, y);
+      });
+
+      const clearHoldTimer = () => {
+        if (drag.holdTimer !== null) {
+          window.clearTimeout(drag.holdTimer);
+          drag.holdTimer = null;
+        }
+      };
+
+      const resetDragState = () => {
+        clearHoldTimer();
+        if (drag.card) {
+          if (drag.pointerId !== -1 && drag.card.hasPointerCapture(drag.pointerId)) {
+            drag.card.releasePointerCapture(drag.pointerId);
+          }
+          drag.card.classList.remove('is-armed');
+          drag.card.classList.remove('is-dragging');
+        }
+        root.classList.remove('is-dragging-card');
+        drag.card = null;
+        drag.pointerId = -1;
+        drag.dragging = false;
+        drag.mayDrag = false;
+        drag.armed = false;
+      };
+
+      const onCardDown = (ev) => {
+        const target = ev.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (ev.button !== 0) return;
+
+        const card = target.closest('[data-card]');
+        if (!card || !(card instanceof HTMLElement)) return;
+        const interactive = target.closest('a, button, input, textarea, select, label');
+        if (interactive) return;
+
+        drag.card = card;
+        drag.pointerId = ev.pointerId;
+        drag.startClientX = ev.clientX;
+        drag.startClientY = ev.clientY;
+        drag.startWorldX = (ev.clientX - state.panX) / state.scale;
+        drag.startWorldY = (ev.clientY - state.panY) / state.scale;
+        drag.startX = parseNum(card.dataset.x);
+        drag.startY = parseNum(card.dataset.y);
+        drag.dragging = false;
+        drag.mayDrag = true;
+        drag.armed = false;
+
+        card.setPointerCapture(ev.pointerId);
+
+        drag.holdTimer = window.setTimeout(() => {
+          if (!drag.mayDrag || !drag.card || drag.pointerId !== ev.pointerId || drag.dragging) return;
+          drag.armed = true;
+          drag.card.classList.add('is-armed');
+        }, drag.holdMs);
+      };
+
+      const onPointerMove = (ev) => {
+        edge.mouseX = ev.clientX;
+        edge.mouseY = ev.clientY;
+
+        if (pan.active && ev.pointerId === pan.pointerId) {
+          state.panX = pan.startPanX + (ev.clientX - pan.startX);
+          state.panY = pan.startPanY + (ev.clientY - pan.startY);
+          render();
+          return;
+        }
+
+        if (!drag.mayDrag || !drag.card || ev.pointerId !== drag.pointerId) return;
+
+        const dx = ev.clientX - drag.startClientX;
+        const dy = ev.clientY - drag.startClientY;
+        const dist = Math.hypot(dx, dy);
+
+        if (!drag.armed) {
+          // Move-before-hold is treated as click/text-select intent, not drag.
+          if (dist > 6) resetDragState();
+          return;
+        }
+
+        if (!drag.dragging && dist < 2) return;
+
+        if (!drag.dragging) {
+          clearHoldTimer();
+          drag.dragging = true;
+          root.classList.add('is-dragging-card');
+          drag.card.classList.remove('is-armed');
+          drag.card.classList.add('is-dragging');
+        }
+
+        ev.preventDefault();
+
+        const worldX = (ev.clientX - state.panX) / state.scale;
+        const worldY = (ev.clientY - state.panY) / state.scale;
+        const nextX = snap(drag.startX + (worldX - drag.startWorldX));
+        const nextY = snap(drag.startY + (worldY - drag.startWorldY));
+        setCardPos(drag.card, nextX, nextY);
+      };
+
+      const endCardDrag = () => {
+        if (!drag.card) return;
+        if (drag.dragging) {
+          const finalX = snap(parseNum(drag.card.dataset.x));
+          const finalY = snap(parseNum(drag.card.dataset.y));
+          setCardPos(drag.card, finalX, finalY);
+        }
+        resetDragState();
+      };
+
+      const onPointerUp = (ev) => {
+        if (pan.active && ev.pointerId === pan.pointerId) {
+          pan.active = false;
+          pan.pointerId = -1;
+          pan.middlePressed = false;
+        }
+
+        if (drag.mayDrag && ev.pointerId === drag.pointerId) {
+          endCardDrag();
+        }
+      };
+
+      const onWheel = (ev) => {
+        ev.preventDefault();
+
+        if (pan.middlePressed) {
+          return;
+        }
+
+        const beforeX = (ev.clientX - state.panX) / state.scale;
+        const beforeY = (ev.clientY - state.panY) / state.scale;
+
+        const zoomFactor = Math.exp(-ev.deltaY * 0.00035);
+        const nextScale = clampScale(state.scale * zoomFactor);
+        state.scale = nextScale;
+        state.panX = ev.clientX - beforeX * nextScale;
+        state.panY = ev.clientY - beforeY * nextScale;
+
+        render();
+      };
+
+      viewport.addEventListener('pointerdown', (ev) => {
+        if (ev.button === 1) {
+          ev.preventDefault();
+          pan.active = true;
+          pan.pointerId = ev.pointerId;
+          pan.startX = ev.clientX;
+          pan.startY = ev.clientY;
+          pan.startPanX = state.panX;
+          pan.startPanY = state.panY;
+          pan.middlePressed = true;
+          viewport.setPointerCapture(ev.pointerId);
+          return;
+        }
+
+        onCardDown(ev);
+      });
+
+      viewport.addEventListener('pointermove', onPointerMove, { passive: false });
+      viewport.addEventListener('pointerup', onPointerUp);
+      viewport.addEventListener('pointercancel', onPointerUp);
+      viewport.addEventListener('wheel', onWheel, { passive: false });
+      viewport.addEventListener('dragstart', (ev) => ev.preventDefault());
+      viewport.addEventListener('mouseenter', () => {
+        edge.active = true;
+      });
+      viewport.addEventListener('mousemove', (ev) => {
+        edge.mouseX = ev.clientX;
+        edge.mouseY = ev.clientY;
+      });
+      viewport.addEventListener('mouseleave', () => {
+        edge.active = false;
+      });
+      window.addEventListener(
+        'mouseup',
+        (ev) => {
+          if (ev.button === 1) {
+            pan.middlePressed = false;
+          }
+        },
+        { capture: true },
+      );
+
+      window.addEventListener('resize', () => {
+        cards.forEach(refreshCardMetrics);
+      });
+      window.addEventListener('load', () => {
+        cards.forEach(refreshCardMetrics);
+      });
+
+      const edgeScroll = () => {
+        if (edge.active) {
+          const rect = viewport.getBoundingClientRect();
+          const localX = edge.mouseX - rect.left;
+          const localY = edge.mouseY - rect.top;
+          let dx = 0;
+          let dy = 0;
+
+          if (localX >= 0 && localX <= rect.width && localY >= 0 && localY <= rect.height) {
+            if (localX < edge.threshold) dx = edge.speed;
+            if (localX > rect.width - edge.threshold) dx = -edge.speed;
+            if (localY < edge.threshold) dy = edge.speed;
+            if (localY > rect.height - edge.threshold) dy = -edge.speed;
+          }
+
+          if (dx !== 0 || dy !== 0) {
+            state.panX += dx;
+            state.panY += dy;
+            render();
+          }
+        }
+
+        window.requestAnimationFrame(edgeScroll);
+      };
+
+      render();
+      window.requestAnimationFrame(edgeScroll);
+    })();
+  </script>
 </BaseLayout>

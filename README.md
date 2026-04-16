@@ -1,1 +1,3 @@
-This is Volleier's personal Wbsite
+# Volleier.github.io
+
+Personal website built with Astro.

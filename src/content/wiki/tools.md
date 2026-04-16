@@ -1,11 +1,11 @@
 ---
-title: "常用工具"
+title: "Tools"
 lastUpdated: 2026-03-30
-description: "记录开发时常用的工具与命令。"
+description: "Toolchain and dependencies used by this project."
 category: "reference"
 ---
 
-# 常用工具
+# Tools
 
 - Node.js
 - Astro
