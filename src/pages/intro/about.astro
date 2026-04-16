@@ -25,6 +25,8 @@ const renderedCards = await Promise.all(
             data-card
             data-x={entry.data.x}
             data-y={entry.data.y}
+            data-init-x={entry.data.x}
+            data-init-y={entry.data.y}
             style={`--card-grid-w:${entry.data.w};`}
           >
             <div class:list={['card-accent', entry.data.accent]}></div>
@@ -41,7 +43,26 @@ const renderedCards = await Promise.all(
     </div>
 
     <div class="serif serif-top"></div>
-    <div class="serif serif-bottom"></div>
+    <div class="serif serif-bottom">
+      <div class="canvas-controls">
+        <a href="/" class="ctrl-btn btn-return">
+          <span class="ctrl-icon"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+          <span class="ctrl-label">RETURN</span>
+        </a>
+        <button id="btn-zoom-fit" class="ctrl-btn btn-fit">
+          <span class="ctrl-icon"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M3 3h18v18H3V3m2 2v14h14V5H5m2 2h4v2H7v2H5V7h2m12 10h-4v-2h4v-2h2v4h-2M7 17v-4h2v2h2v2H7m12-10h-4v2h2v2h2V7z"/></svg></span>
+          <span class="ctrl-label">FIT</span>
+        </button>
+        <button id="btn-focus" class="ctrl-btn btn-focus">
+          <span class="ctrl-icon"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg></span>
+          <span class="ctrl-label">FOCUS</span>
+        </button>
+        <button id="btn-view-reset" class="ctrl-btn btn-reset">
+          <span class="ctrl-icon"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg></span>
+          <span class="ctrl-label">RESET</span>
+        </button>
+      </div>
+    </div>
     <div class="serif serif-left"></div>
     <div class="serif serif-right"></div>
   </main>
@@ -246,6 +267,11 @@ const renderedCards = await Promise.all(
         const card = target.closest('[data-card]');
         if (!card || !(card instanceof HTMLElement)) return;
 
+        if (state.focusMode) {
+          focusOnCard(card);
+          return;
+        }
+
         drag.card = card;
         drag.pointerId = ev.pointerId;
         drag.startClientX = ev.clientX;
@@ -428,6 +454,99 @@ const renderedCards = await Promise.all(
       window.addEventListener('load', () => {
         cards.forEach(refreshCardMetrics);
       });
+
+      // Viewport Control Handlers
+      const btnReset = document.getElementById('btn-view-reset');
+      const btnFit = document.getElementById('btn-zoom-fit');
+      const btnFocus = document.getElementById('btn-focus');
+
+      if (btnReset) {
+        btnReset.addEventListener('click', () => {
+          canvas.style.transition = 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+          
+          // Reset card positions to initial
+          cards.forEach(card => {
+            const ix = parseNum(card.dataset.initX);
+            const iy = parseNum(card.dataset.initY);
+            setCardPos(card, ix, iy);
+          });
+
+          state.panX = 0;
+          state.panY = 0;
+          state.scale = 1;
+          
+          // Deactivate focus mode if active
+          if (state.focusMode) {
+            state.focusMode = false;
+            root.classList.remove('is-focus-mode');
+            if (btnFocus) btnFocus.classList.remove('is-active');
+          }
+
+          render();
+          setTimeout(() => { canvas.style.transition = ''; }, 800);
+        });
+      }
+
+      if (btnFit) {
+        btnFit.addEventListener('click', () => {
+          if (cards.length === 0) return;
+
+          let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+          
+          cards.forEach(card => {
+            const x = parseNum(card.dataset.x);
+            const y = parseNum(card.dataset.y);
+            const w = card.offsetWidth;
+            const h = card.offsetHeight;
+            
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x + w);
+            maxY = Math.max(maxY, y + h);
+          });
+
+          const contentW = maxX - minX;
+          const contentH = maxY - minY;
+          const padding = 120;
+          
+          const availableW = window.innerWidth - padding;
+          const availableH = window.innerHeight - padding;
+          
+          const targetScale = Math.min(availableW / contentW, availableH / contentH, 1.2);
+          const finalScale = Math.max(targetScale, 0.4);
+
+          canvas.style.transition = 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+          state.scale = finalScale;
+          state.panX = (window.innerWidth - contentW * state.scale) / 2 - minX * state.scale;
+          state.panY = (window.innerHeight - contentH * state.scale) / 2 - minY * state.scale;
+          
+          render();
+          setTimeout(() => { canvas.style.transition = ''; }, 800);
+        });
+      }
+
+      if (btnFocus) {
+        btnFocus.addEventListener('click', () => {
+          state.focusMode = !state.focusMode;
+          btnFocus.classList.toggle('is-active', state.focusMode);
+          root.classList.toggle('is-focus-mode', state.focusMode);
+        });
+      }
+
+      const focusOnCard = (card) => {
+        const rect = getCardRect(card);
+        // Occupy roughly 45% of screen width to ensure >1/3 coverage
+        const targetW = window.innerWidth * 0.45;
+        const targetScale = Math.min(targetW / rect.w, 1.8);
+        const finalScale = Math.max(targetScale, 1);
+
+        canvas.style.transition = 'transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
+        state.scale = finalScale;
+        state.panX = window.innerWidth / 2 - rect.cx * state.scale;
+        state.panY = window.innerHeight / 2 - rect.cy * state.scale;
+        render();
+        setTimeout(() => { canvas.style.transition = ''; }, 800);
+      };
 
       const edgeScroll = () => {
         if (edge.active) {
