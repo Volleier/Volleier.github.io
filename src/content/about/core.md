@@ -1,10 +1,9 @@
 ---
-order: 2
 tag: "02_CORE_PROTOCOL"
 heading: "核心协议 / CORE"
 accent: "magenta"
-x: 1160
-y: 120
+x: 432
+y: 72
 w: 20
 className: "primary"
 ---

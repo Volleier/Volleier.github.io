@@ -1,10 +1,9 @@
 ---
-order: 5
 tag: "05_PROJECT_LOG"
 heading: "项目记录 / PROJECT"
 accent: "white"
-x: 1160
-y: 860
+x: 432
+y: 792
 w: 20
 className: "project"
 ---

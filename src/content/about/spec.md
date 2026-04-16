@@ -1,10 +1,9 @@
 ---
-order: 3
 tag: "03_TECH_SPEC"
 heading: "技术指标 / SPEC"
 accent: "cyan"
-x: 1160
-y: 480
+x: 432
+y: 432
 w: 20
 className: "spec"
 ---

@@ -56,8 +56,8 @@ const renderedCards = await Promise.all(
       const gridSize = Number(root.dataset.gridSize || 24);
       const cards = Array.from(canvas.querySelectorAll('[data-card]'));
       const state = {
-        panX: window.innerWidth * 0.2,
-        panY: window.innerHeight * 0.2,
+        panX: 0,
+        panY: 0,
         scale: 1,
       };
 
@@ -117,6 +117,89 @@ const renderedCards = await Promise.all(
         card.style.minHeight = `${height}px`;
       };
 
+      const getCardRect = (card) => {
+        const x = parseNum(card.dataset.x);
+        const y = parseNum(card.dataset.y);
+        const w = card.offsetWidth;
+        const h = card.offsetHeight;
+        return { x, y, w, h, cx: x + w / 2, cy: y + h / 2 };
+      };
+
+      const resolveCollisions = (movedCard, startX, startY) => {
+        let iterations = 0;
+        const maxIterations = 60;
+        let hasCollision = true;
+
+        let curX = startX;
+        let curY = startY;
+        const w = movedCard.offsetWidth;
+        const h = movedCard.offsetHeight;
+
+        while (hasCollision && iterations < maxIterations) {
+          hasCollision = false;
+          iterations++;
+
+          const r1 = {
+            x: curX,
+            y: curY,
+            w,
+            h,
+            cx: curX + w / 2,
+            cy: curY + h / 2
+          };
+
+          for (const other of cards) {
+            if (other === movedCard) continue;
+            
+            const ox = parseNum(other.dataset.x);
+            const oy = parseNum(other.dataset.y);
+            const r2 = {
+              x: ox,
+              y: oy,
+              w: other.offsetWidth,
+              h: other.offsetHeight,
+              cx: ox + other.offsetWidth / 2,
+              cy: oy + other.offsetHeight / 2
+            };
+
+            // Intersection check (AABB)
+            if (
+              r1.x < r2.x + r2.w &&
+              r1.x + r1.w > r2.x &&
+              r1.y < r2.y + r2.h &&
+              r1.y + r1.h > r2.y
+            ) {
+              hasCollision = true;
+              const dx = r1.cx - r2.cx;
+              const dy = r1.cy - r2.cy;
+
+              // Dominant axis displacement: Push to the nearest edge
+              if (Math.abs(dx) / r1.w >= Math.abs(dy) / r1.h) {
+                // Horizontal push
+                if (dx >= 0) {
+                  curX = r2.x + r2.w + gridSize; // Move to right edge
+                } else {
+                  curX = r2.x - r1.w - gridSize; // Move to left edge
+                }
+              } else {
+                // Vertical push
+                if (dy >= 0) {
+                  curY = r2.y + r2.h + gridSize; // Move to bottom edge
+                } else {
+                  curY = r2.y - r1.h - gridSize; // Move to top edge
+                }
+              }
+              
+              curX = snap(curX);
+              curY = snap(curY);
+              // Restart checking all cards from the new position
+              break; 
+            }
+          }
+        }
+        return { x: curX, y: curY };
+      };
+
       const render = () => {
         root.style.setProperty('--pan-x', `${state.panX}`);
         root.style.setProperty('--pan-y', `${state.panY}`);
@@ -148,11 +231,11 @@ const renderedCards = await Promise.all(
           drag.card.classList.remove('is-dragging');
         }
         root.classList.remove('is-dragging-card');
-        drag.card = null;
         drag.pointerId = -1;
         drag.dragging = false;
         drag.mayDrag = false;
         drag.armed = false;
+        // drag.card cleanup is now handled in endCardDrag to allow animation to complete.
       };
 
       const onCardDown = (ev) => {
@@ -230,13 +313,33 @@ const renderedCards = await Promise.all(
       };
 
       const endCardDrag = () => {
-        if (!drag.card) return;
+        const card = drag.card;
+        if (!card) return;
+
         if (drag.dragging) {
-          const finalX = snap(parseNum(drag.card.dataset.x));
-          const finalY = snap(parseNum(drag.card.dataset.y));
-          setCardPos(drag.card, finalX, finalY);
+          const dropX = snap(parseNum(card.dataset.x));
+          const dropY = snap(parseNum(card.dataset.y));
+
+          // 1. Simulate final position until clear
+          const finalPos = resolveCollisions(card, dropX, dropY);
+
+          // 2. Clear dragging classes first (re-enables CSS transition)
+          resetDragState();
+
+          // 3. Apply position in next frame to trigger animation
+          requestAnimationFrame(() => {
+            setCardPos(card, finalPos.x, finalPos.y);
+            
+            // Visual feedback: brief z-index boost during animation
+            card.style.zIndex = '50';
+            setTimeout(() => { 
+              if(card) card.style.zIndex = ''; 
+            }, 600);
+          });
+        } else {
+          resetDragState();
         }
-        resetDragState();
+        drag.card = null;
       };
 
       const onPointerUp = (ev) => {

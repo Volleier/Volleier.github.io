@@ -1,10 +1,9 @@
 ---
-order: 4
 tag: "04_ACHIEVEMENT"
 heading: "荣誉与成果 / ARCHIVE"
 accent: "gold"
-x: 1664
-y: 984
+x: 936
+y: 936
 w: 20
 className: "achievement"
 ---

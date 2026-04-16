@@ -1,10 +1,9 @@
 ---
-order: 1
 tag: "01_HINT"
 heading: " / TIP"
 accent: "cyan"
-x: 800
-y: 648
+x: 48
+y: 600
 w: 14
 className: "hint-card"
 ---
