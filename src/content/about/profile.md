@@ -7,13 +7,11 @@ y: 72
 w: 14
 className: "profile-card"
 ---
+
 ![Volleier Avatar](/assets/loading/Volleier.png)
 
 # VOLLEIER
 
-`ID.VLR_RESUME_SYNC`
+一名游戏开发者
 
-- `STATUS.` **ACTIVE**
 - `MAIL.` [Volleiershao@gmail.com](mailto:Volleiershao@gmail.com)
-
-[00 RETURN_HOME](/)
