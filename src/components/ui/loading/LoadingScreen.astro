@@ -91,23 +91,17 @@ import '../../../styles/components/loading-screen.scss';
         const nameZh = document.querySelector('.name-zh');
         if (!loadingScreen) return;
 
-        let flightWrapper = null;
-        let completed = false;
-        const finishLoading = () => {
-            if (completed) return;
-            completed = true;
-            loadingScreen.classList.add('fade-out');
-            window.setTimeout(() => {
+        const hardTimeout = window.setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+        }, 5200);
+
+        if (!nameZh) {
+            setTimeout(() => {
                 loadingScreen.style.display = 'none';
-                flightWrapper?.remove();
+                window.clearTimeout(hardTimeout);
                 document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
-            }, 250);
-        };
-
-        const hardTimeout = window.setTimeout(finishLoading, 1200);
-
-        if (!nameZh || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            window.setTimeout(finishLoading, 120);
+            }, 1800);
             return;
         }
 
@@ -142,7 +136,7 @@ import '../../../styles/components/loading-screen.scss';
             setTimeout(() => {
                 const rect = nameZh.getBoundingClientRect();
 
-                flightWrapper = document.createElement('div');
+                const flightWrapper = document.createElement('div');
                 flightWrapper.className = 'flight-wrapper';
                 flightWrapper.style.top = `${rect.top}px`;
                 flightWrapper.style.left = `${rect.left}px`;
@@ -178,11 +172,16 @@ import '../../../styles/components/loading-screen.scss';
 
                 setTimeout(() => {
                     flightWrapper.classList.add('morph-fade');
+                    document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
                     window.clearTimeout(hardTimeout);
-                    window.setTimeout(finishLoading, 220);
-                }, 260);
-            }, 220);
-        }, 180);
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                        flightWrapper.remove();
+                        document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+                    }, 600);
+                }, 1000);
+            }, 600);
+        }, 3000);
     }
 
     startLoadingTimer();
