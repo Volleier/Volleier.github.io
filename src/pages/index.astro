@@ -2,7 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/components/pages/index.scss';
 ---
-<BaseLayout showNav={false} showFooter={false} showLoading={true}>
+<BaseLayout showNav={false} showFooter={false} showLoading={true} preloadImage="/assets/default/DefaultPage.webp">
   <main class="index-container">
     <canvas id="webgl-canvas" class="webgl-canvas"></canvas>
 
@@ -54,9 +54,13 @@ import '../styles/components/pages/index.scss';
       <!-- Centered Logo -->
       <div class="logo-area">
         <img 
-          src="/assets/default/PengLaiSiShaoXiao-Logo.png" 
+          src="/assets/default/PengLaiSiShaoXiao-Logo.webp"
           alt="PengLaiSiShaoXiao Logo" 
           class="main-logo"
+          width="1440"
+          height="534"
+          decoding="async"
+          fetchpriority="high"
         />
       </div>
       <!-- Industrial Buttons Container -->
@@ -89,12 +93,6 @@ import '../styles/components/pages/index.scss';
       const container = document.querySelector('.index-container');
       const coordX = document.getElementById('coord-x');
       const coordY = document.getElementById('coord-y');
-
-      // Cinematic FLIP Event Listener Bridge
-      document.addEventListener('LoadingSequenceMorph', () => {
-        const mainLogo = document.querySelector('.main-logo');
-        if (mainLogo) mainLogo.classList.add('sync-reveal');
-      });
 
       window.addEventListener('mousemove', (e) => {
         if (!container) return;
@@ -139,7 +137,15 @@ import '../styles/components/pages/index.scss';
       const timeMarker = document.getElementById('time-marker');
       const timeText = document.getElementById('time-text-val');
 
+      let timelineFrame = 0;
+      let resumeWebGL = () => {};
+
       function updateTimeline() {
+        if (document.hidden) {
+          timelineFrame = 0;
+          return;
+        }
+
         const now = new Date();
         const hours = now.getUTCHours();
         const minutes = now.getUTCMinutes();
@@ -155,9 +161,9 @@ import '../styles/components/pages/index.scss';
         if (timeText) {
           timeText.textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}.${String(ms).padStart(3,'0')}`;
         }
-        requestAnimationFrame(updateTimeline);
+        timelineFrame = requestAnimationFrame(updateTimeline);
       }
-      requestAnimationFrame(updateTimeline);
+      updateTimeline();
       
       // 4. Raw WebGL Graphic Hardware Shader Initialization
       function initExperimentalWebGL(cvs) {
@@ -227,7 +233,9 @@ import '../styles/components/pages/index.scss';
 
         const tex = gl.createTexture();
         const img = new Image();
-        img.src = '/assets/default/DefaultPage.jpg';
+        img.decoding = 'async';
+        img.fetchPriority = 'high';
+        img.src = '/assets/default/DefaultPage.webp';
         
         let cx=0, cy=0;
         window.updateWebGLOffset = (x, y) => { cx = x; cy = y; };
@@ -244,7 +252,11 @@ import '../styles/components/pages/index.scss';
             const uImgRes = gl.getUniformLocation(prg, "u_imgRes");
             const uOff = gl.getUniformLocation(prg, "u_off");
 
+            let renderFrame = 0;
             const render = () => {
+                renderFrame = 0;
+                if (document.hidden) return;
+
                 const w = cvs.clientWidth; const h = cvs.clientHeight;
                 if(cvs.width !== w || cvs.height !== h) { cvs.width = w; cvs.height = h; }
                 gl.viewport(0, 0, w, h);
@@ -252,12 +264,21 @@ import '../styles/components/pages/index.scss';
                 gl.uniform2f(uImgRes, img.width, img.height);
                 gl.uniform2f(uOff, cx/w, cy/h);
                 gl.drawArrays(gl.TRIANGLES, 0, 6);
-                requestAnimationFrame(render);
+                renderFrame = requestAnimationFrame(render);
             };
-            render();
+            resumeWebGL = () => {
+              if (!renderFrame && !document.hidden) renderFrame = requestAnimationFrame(render);
+            };
+            resumeWebGL();
         };
       }
       initExperimentalWebGL(document.getElementById('webgl-canvas'));
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) return;
+        if (!timelineFrame) updateTimeline();
+        resumeWebGL();
+      });
 
     });
   </script>

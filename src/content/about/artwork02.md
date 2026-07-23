@@ -8,4 +8,4 @@ w: 18
 className: "art-card"
 ---
 
-![artwork](/assets/about/artwork02.jpg)
+<img src="/assets/about/artwork02.webp" alt="artwork" width="800" height="464" loading="lazy" decoding="async" fetchpriority="low" />

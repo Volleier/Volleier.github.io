@@ -8,7 +8,7 @@
   overflow: hidden;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.8s;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
   font-family: sans-serif;
 
   &.fade-out {
@@ -283,8 +283,8 @@
     left: 12px;
     z-index: 1;
     background-color: #00ff9d;
-    -webkit-mask-image: url('/assets/loading/Volleier-Logo.png');
-    mask-image: url('/assets/loading/Volleier-Logo.png');
+    -webkit-mask-image: url('/assets/loading/Volleier-Logo.webp');
+    mask-image: url('/assets/loading/Volleier-Logo.webp');
     -webkit-mask-size: contain;
     mask-size: contain;
     -webkit-mask-repeat: no-repeat;

@@ -168,12 +168,25 @@ import '../../../styles/components/effects/gilded-effect.scss';
       const uProgress = gl.getUniformLocation(prog, "u_progress");
 
       const startTime = performance.now();
+      let animationFrame = 0;
+      let stopped = false;
+
+      const stop = () => {
+        stopped = true;
+        if (animationFrame) window.cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+      };
+
+      document.addEventListener('LoadingScreenComplete', stop, { once: true });
 
       function loop(now: number) {
-        const dpr = window.devicePixelRatio || 1;
+        animationFrame = 0;
+        if (stopped || document.hidden) return;
+
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
         const w = (canvas.parentElement?.clientWidth || 0);
         const h = (canvas.parentElement?.clientHeight || 0);
-        if (w === 0 || h === 0) { requestAnimationFrame(loop); return; }
+        if (w === 0 || h === 0) { animationFrame = requestAnimationFrame(loop); return; }
 
         if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
           canvas.width = Math.floor(w * dpr);
@@ -196,10 +209,10 @@ import '../../../styles/components/effects/gilded-effect.scss';
         gl!.uniform1f(uProgress, progress);
 
         gl!.drawArrays(gl!.TRIANGLES, 0, 6);
-        requestAnimationFrame(loop);
+        animationFrame = requestAnimationFrame(loop);
       }
 
-      requestAnimationFrame(loop);
+      animationFrame = requestAnimationFrame(loop);
     });
   }
 

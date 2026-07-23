@@ -3,6 +3,7 @@ const {
   title = 'Volleier', 
   description = '', 
   ogImage = '',
+  preloadImage = '',
   showNav = true,
   showFooter = true,
   showLoading = false
@@ -22,6 +23,7 @@ import LoadingScreen from '../components/ui/loading/LoadingScreen.astro';
     <meta property="og:title" content={title} />
     {description ? <meta property="og:description" content={description} /> : null}
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+    {preloadImage ? <link rel="preload" as="image" href={preloadImage} type="image/webp" fetchpriority="high" /> : null}
   </head>
   <body class="min-h-screen flex flex-col">
     {showLoading && <LoadingScreen />}

@@ -451,10 +451,6 @@ const renderedCards = await Promise.all(
       window.addEventListener('resize', () => {
         cards.forEach(refreshCardMetrics);
       });
-      window.addEventListener('load', () => {
-        cards.forEach(refreshCardMetrics);
-      });
-
       // Viewport Control Handlers
       const btnReset = document.getElementById('btn-view-reset');
       const btnFit = document.getElementById('btn-zoom-fit');
@@ -548,7 +544,11 @@ const renderedCards = await Promise.all(
         setTimeout(() => { canvas.style.transition = ''; }, 800);
       };
 
+      let edgeScrollFrame = 0;
       const edgeScroll = () => {
+        edgeScrollFrame = 0;
+        if (document.hidden) return;
+
         if (edge.active) {
           const rect = viewport.getBoundingClientRect();
           const localX = edge.mouseX - rect.left;
@@ -570,11 +570,16 @@ const renderedCards = await Promise.all(
           }
         }
 
-        window.requestAnimationFrame(edgeScroll);
+        edgeScrollFrame = window.requestAnimationFrame(edgeScroll);
       };
 
       render();
-      window.requestAnimationFrame(edgeScroll);
+      edgeScrollFrame = window.requestAnimationFrame(edgeScroll);
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && !edgeScrollFrame) {
+          edgeScrollFrame = window.requestAnimationFrame(edgeScroll);
+        }
+      });
     })();
   </script>
 </BaseLayout>
