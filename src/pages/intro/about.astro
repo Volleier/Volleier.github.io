@@ -135,14 +135,6 @@ const renderedCards = await Promise.all(
         scale: 1,
       };
 
-      const edge = {
-        active: false,
-        mouseX: 0,
-        mouseY: 0,
-        threshold: 72,
-        speed: 18,
-      };
-
       const drag = {
         card: null,
         pointerId: -1,
@@ -309,7 +301,6 @@ const renderedCards = await Promise.all(
         drag.dragging = false;
         drag.mayDrag = false;
         drag.armed = false;
-        // drag.card cleanup is now handled in endCardDrag to allow animation to complete.
       };
 
       const onCardDown = (ev) => {
@@ -338,8 +329,6 @@ const renderedCards = await Promise.all(
         drag.armed = false;
         drag.wasDragging = false;
 
-        // Note: card.setPointerCapture is moved to onPointerMove to avoid interfering with 'click' events for links.
-
         drag.holdTimer = window.setTimeout(() => {
           if (!drag.mayDrag || !drag.card || drag.pointerId !== ev.pointerId || drag.dragging) return;
           drag.armed = true;
@@ -348,9 +337,6 @@ const renderedCards = await Promise.all(
       };
 
       const onPointerMove = (ev) => {
-        edge.mouseX = ev.clientX;
-        edge.mouseY = ev.clientY;
-
         if (pan.active && ev.pointerId === pan.pointerId) {
           state.panX = pan.startPanX + (ev.clientX - pan.startX);
           state.panY = pan.startPanY + (ev.clientY - pan.startY);
@@ -365,7 +351,6 @@ const renderedCards = await Promise.all(
         const dist = Math.hypot(dx, dy);
 
         if (!drag.armed) {
-          // Move-before-hold is treated as click/text-select intent, not drag.
           if (dist > 6) resetDragState();
           return;
         }
@@ -481,16 +466,6 @@ const renderedCards = await Promise.all(
       }, { capture: true });
       viewport.addEventListener('wheel', onWheel, { passive: false });
       viewport.addEventListener('dragstart', (ev) => ev.preventDefault());
-      viewport.addEventListener('mouseenter', () => {
-        edge.active = true;
-      });
-      viewport.addEventListener('mousemove', (ev) => {
-        edge.mouseX = ev.clientX;
-        edge.mouseY = ev.clientY;
-      });
-      viewport.addEventListener('mouseleave', () => {
-        edge.active = false;
-      });
       window.addEventListener(
         'mouseup',
         (ev) => {
@@ -504,6 +479,7 @@ const renderedCards = await Promise.all(
       window.addEventListener('resize', () => {
         cards.forEach(refreshCardMetrics);
       });
+
       // Viewport Control Handlers
       const btnReset = document.getElementById('btn-view-reset');
       const btnFit = document.getElementById('btn-zoom-fit');
@@ -584,7 +560,6 @@ const renderedCards = await Promise.all(
 
       const focusOnCard = (card) => {
         const rect = getCardRect(card);
-        // Occupy roughly 45% of screen width to ensure >1/3 coverage
         const targetW = window.innerWidth * 0.45;
         const targetScale = Math.min(targetW / rect.w, 1.8);
         const finalScale = Math.max(targetScale, 1);
@@ -597,42 +572,7 @@ const renderedCards = await Promise.all(
         setTimeout(() => { canvas.style.transition = ''; }, 800);
       };
 
-      let edgeScrollFrame = 0;
-      const edgeScroll = () => {
-        edgeScrollFrame = 0;
-        if (document.hidden) return;
-
-        if (edge.active) {
-          const rect = viewport.getBoundingClientRect();
-          const localX = edge.mouseX - rect.left;
-          const localY = edge.mouseY - rect.top;
-          let dx = 0;
-          let dy = 0;
-
-          if (localX >= 0 && localX <= rect.width && localY >= 0 && localY <= rect.height) {
-            if (localX < edge.threshold) dx = edge.speed;
-            if (localX > rect.width - edge.threshold) dx = -edge.speed;
-            if (localY < edge.threshold) dy = edge.speed;
-            if (localY > rect.height - edge.threshold) dy = -edge.speed;
-          }
-
-          if (dx !== 0 || dy !== 0) {
-            state.panX += dx;
-            state.panY += dy;
-            render();
-          }
-        }
-
-        edgeScrollFrame = window.requestAnimationFrame(edgeScroll);
-      };
-
       render();
-      edgeScrollFrame = window.requestAnimationFrame(edgeScroll);
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && !edgeScrollFrame) {
-          edgeScrollFrame = window.requestAnimationFrame(edgeScroll);
-        }
-      });
     })();
   </script>
 </BaseLayout>
