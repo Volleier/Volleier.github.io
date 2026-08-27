@@ -87,12 +87,24 @@
 .page-transition-blackout {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1000;
   background: #000;
   opacity: 0;
   pointer-events: none;
   will-change: opacity;
 }
+
+.about-transition-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  opacity: 1;
+  background: #090909;
+}
+
 
 body:has(.index-container.is-leaving-for-about),
 body:has(.about-container.is-leaving-to-home) {

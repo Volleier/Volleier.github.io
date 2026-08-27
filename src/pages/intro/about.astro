@@ -78,6 +78,11 @@ const renderedCards = await Promise.all(
       const returnLink = document.querySelector('[data-page-transition="home"]');
       if (returnLink) {
         returnLink.addEventListener('click', (event) => {
+          if (window.parent !== window) {
+            event.preventDefault();
+            window.parent.postMessage({ type: 'volleier:return-home' }, window.location.origin);
+            return;
+          }
           if (
             event.defaultPrevented ||
             event.button !== 0 ||
@@ -106,14 +111,16 @@ const renderedCards = await Promise.all(
       if (shouldAnimateEntry) {
         root.classList.add('is-entering-from-bottom');
         root.classList.add('has-transition-blackout');
+        document.documentElement.removeAttribute('data-about-transition-pending');
         window.addEventListener('load', async () => {
           const blackout = root.querySelector('.page-transition-blackout');
           if (blackout) {
-            const revealAnimation = blackout.animate(
+            await new Promise((resolve) => window.setTimeout(resolve, 180));
+            blackout.animate(
               [{ opacity: 1 }, { opacity: 0 }],
-              { duration: 760, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' },
+              { duration: 980, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' },
             );
-            try { await revealAnimation.finished; } catch {}
+            await new Promise((resolve) => window.setTimeout(resolve, 1000));
           }
           root.classList.remove('has-transition-blackout');
         }, { once: true });

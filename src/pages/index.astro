@@ -95,11 +95,11 @@ import '../styles/components/pages/index.scss';
         </a>
       </div>
     </div>
-    <div class="page-transition-blackout" aria-hidden="true"></div>
   </main>
+  <div class="page-transition-blackout" aria-hidden="true"></div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    const initIndexPage = () => {
       const container = document.querySelector('.index-container');
       const coordX = document.getElementById('coord-x');
       const coordY = document.getElementById('coord-y');
@@ -131,21 +131,46 @@ import '../styles/components/pages/index.scss';
 
           event.preventDefault();
           document.body.style.backgroundColor = '#1a1a1a';
-          try { window.sessionStorage.setItem('volleier:about-transition', '1'); } catch {}
           container.classList.add('is-leaving-for-about');
-          const blackout = container.querySelector('.page-transition-blackout');
+          const blackout = document.querySelector('.page-transition-blackout');
           if (blackout) {
-            const blackoutAnimation = blackout.animate(
+            blackout.animate(
               [{ opacity: 0 }, { opacity: 1 }],
               { duration: 820, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' },
             );
-            try { await blackoutAnimation.finished; } catch {}
-          } else {
-            await new Promise((resolve) => window.setTimeout(resolve, 820));
           }
-          window.location.assign(destination);
+          await new Promise((resolve) => window.setTimeout(resolve, 840));
+          const aboutFrame = document.createElement('iframe');
+          aboutFrame.className = 'about-transition-frame';
+          aboutFrame.src = destination;
+          aboutFrame.title = '关于我';
+          aboutFrame.addEventListener('load', () => {
+            window.history.pushState({}, '', destination);
+            blackout?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 980, easing: 'ease-out', fill: 'forwards' });
+            window.setTimeout(() => {
+              container.classList.remove('is-leaving-for-about');
+              blackout?.style.setProperty('opacity', '0');
+            }, 1000);
+          }, { once: true });
+          document.body.appendChild(aboutFrame);
         });
       }
+
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        if (event.data?.type !== 'volleier:return-home') return;
+        const aboutFrame = document.querySelector('.about-transition-frame');
+        if (!aboutFrame) return;
+        const blackout = document.querySelector('.page-transition-blackout');
+        blackout?.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 840, easing: 'ease-in', fill: 'forwards' });
+        window.setTimeout(() => {
+          aboutFrame.remove();
+          window.history.pushState({}, '', '/');
+          container?.classList.add('is-entering-from-top');
+          blackout?.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 820, easing: 'ease-out', fill: 'forwards' });
+          window.setTimeout(() => container?.classList.remove('is-entering-from-top'), 850);
+        }, 860);
+      });
 
       document.addEventListener('LoadingSequenceMorph', () => {
         const mainLogo = document.querySelector('.main-logo');
@@ -413,7 +438,13 @@ import '../styles/components/pages/index.scss';
         resumeWebGL();
       });
 
-    });
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initIndexPage, { once: true });
+    } else {
+      initIndexPage();
+    }
   </script>
 </BaseLayout>
 

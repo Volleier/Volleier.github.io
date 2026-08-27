@@ -28,6 +28,35 @@ import LoadingScreen from '../components/ui/loading/LoadingScreen.astro';
     {preloadImages.map((image) => (
       <link rel="preload" as="image" href={image} type="image/webp" fetchpriority="high" />
     ))}
+    <script is:inline>
+      (() => {
+        try {
+          const isAboutPage = window.location.pathname.replace(/\/$/, '').endsWith('/intro/about');
+          if (
+            isAboutPage &&
+            window.sessionStorage.getItem('volleier:about-transition') === '1'
+          ) {
+            document.documentElement.dataset.aboutTransitionPending = 'true';
+          }
+        } catch {}
+      })();
+    </script>
+    <style is:inline>
+      html[data-about-transition-pending="true"] {
+        background: #000 !important;
+      }
+      html[data-about-transition-pending="true"] body > * {
+        visibility: hidden !important;
+      }
+      html[data-about-transition-pending="true"] body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 2147483647;
+        background: #000;
+        pointer-events: none;
+      }
+    </style>
     {showLoading && (
       <script is:inline>
         (() => {
