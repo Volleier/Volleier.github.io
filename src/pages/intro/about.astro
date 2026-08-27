@@ -65,6 +65,7 @@ const renderedCards = await Promise.all(
     </div>
     <div class="serif serif-left"></div>
     <div class="serif serif-right"></div>
+    <div class="page-transition-blackout" aria-hidden="true"></div>
   </main>
 
   <script is:inline>
@@ -90,9 +91,10 @@ const renderedCards = await Promise.all(
           if (!destination) return;
 
           event.preventDefault();
+          document.body.style.backgroundColor = '#1a1a1a';
           try { window.sessionStorage.setItem('volleier:index-transition', '1'); } catch {}
           root.classList.add('is-leaving-to-home');
-          window.setTimeout(() => { window.location.assign(destination); }, 620);
+          window.setTimeout(() => { window.location.assign(destination); }, 820);
         });
       }
 
@@ -101,9 +103,21 @@ const renderedCards = await Promise.all(
         shouldAnimateEntry = window.sessionStorage.getItem('volleier:about-transition') === '1';
         if (shouldAnimateEntry) window.sessionStorage.removeItem('volleier:about-transition');
       } catch {}
-      if (shouldAnimateEntry && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (shouldAnimateEntry) {
         root.classList.add('is-entering-from-bottom');
-        root.addEventListener('animationend', () => root.classList.remove('is-entering-from-bottom'), { once: true });
+        root.classList.add('has-transition-blackout');
+        window.addEventListener('load', async () => {
+          const blackout = root.querySelector('.page-transition-blackout');
+          if (blackout) {
+            const revealAnimation = blackout.animate(
+              [{ opacity: 1 }, { opacity: 0 }],
+              { duration: 760, easing: 'cubic-bezier(0.4, 0, 0.2, 1)', fill: 'forwards' },
+            );
+            try { await revealAnimation.finished; } catch {}
+          }
+          root.classList.remove('has-transition-blackout');
+        }, { once: true });
+        window.setTimeout(() => root.classList.remove('is-entering-from-bottom'), 850);
       }
 
       const gridSize = Number(root.dataset.gridSize || 24);

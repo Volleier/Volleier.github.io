@@ -21,12 +21,17 @@
   font-family: 'Inter', system-ui, sans-serif;
 
   &.is-leaving-for-about {
-    animation: index-slide-away 620ms cubic-bezier(0.92, 0.02, 0.22, 0.96) forwards;
+    background-color: #1a1a1a;
     pointer-events: none;
+
+    > :not(.particle-canvas):not(.page-transition-blackout) {
+      animation: index-slide-away 820ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+    }
+
   }
 
   &.is-entering-from-top {
-    animation: index-slide-in-from-top 860ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: index-slide-in-from-top 820ms cubic-bezier(0.65, 0, 0.35, 1) both;
   }
 
   &::before {
@@ -71,29 +76,27 @@
 
 @keyframes index-slide-away {
   0% { transform: translate3d(0, 0, 0); }
-  58% { transform: translate3d(0, -112vh, 0); }
-  100% { transform: translate3d(0, -155vh, 0); }
+  100% { transform: translate3d(0, -110vh, 0); }
 }
 
 @keyframes index-slide-in-from-top {
-  0% { transform: translate3d(0, -115vh, 0); }
-  62% { transform: translate3d(0, 2.5vh, 0); }
+  0% { transform: translate3d(0, -110vh, 0); }
   100% { transform: translate3d(0, 0, 0); }
+}
+
+.page-transition-blackout {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity;
 }
 
 body:has(.index-container.is-leaving-for-about),
 body:has(.about-container.is-leaving-to-home) {
   background: #1a1a1a;
-}
-
-.index-container.is-leaving-for-about .particle-canvas {
-  animation: particle-stay-during-exit 620ms cubic-bezier(0.92, 0.02, 0.22, 0.96) forwards;
-}
-
-@keyframes particle-stay-during-exit {
-  0% { transform: translate3d(0, 0, 0); }
-  58% { transform: translate3d(0, 112vh, 0); }
-  100% { transform: translate3d(0, 155vh, 0); }
 }
 
 .particle-canvas {
@@ -389,9 +392,6 @@ body:has(.about-container.is-leaving-to-home) {
 @media (prefers-reduced-motion: reduce) {
   .particle-canvas { opacity: 0.35; }
   .content-wrapper { transition: none; }
-  .index-container.is-leaving-for-about,
-  .index-container.is-entering-from-top,
-  .index-container.is-leaving-for-about .particle-canvas { animation: none; }
 }
 
 /* Logo Area */
