@@ -4,6 +4,7 @@ const {
   description = '', 
   ogImage = '',
   preloadImage = '',
+  preloadImages = [],
   showNav = true,
   showFooter = true,
   showLoading = false
@@ -24,6 +25,23 @@ import LoadingScreen from '../components/ui/loading/LoadingScreen.astro';
     {description ? <meta property="og:description" content={description} /> : null}
     {ogImage ? <meta property="og:image" content={ogImage} /> : null}
     {preloadImage ? <link rel="preload" as="image" href={preloadImage} type="image/webp" fetchpriority="high" /> : null}
+    {preloadImages.map((image) => (
+      <link rel="preload" as="image" href={image} type="image/webp" fetchpriority="high" />
+    ))}
+    {showLoading && (
+      <script is:inline>
+        (() => {
+          const key = 'volleier:loading-screen-seen';
+          try {
+            if (window.localStorage.getItem(key) === '1') {
+              document.documentElement.dataset.skipLoadingScreen = 'true';
+            } else {
+              window.localStorage.setItem(key, '1');
+            }
+          } catch {}
+        })();
+      </script>
+    )}
   </head>
   <body class="min-h-screen flex flex-col">
     {showLoading && <LoadingScreen />}

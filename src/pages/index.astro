@@ -2,7 +2,15 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import '../styles/components/pages/index.scss';
 ---
-<BaseLayout showNav={false} showFooter={false} showLoading={true} preloadImage="/assets/default/DefaultPage.webp">
+<BaseLayout
+  showNav={false}
+  showFooter={false}
+  showLoading={true}
+  preloadImages={[
+    '/assets/default/DefaultPage.webp',
+    '/assets/default/PengLaiSiShaoXiao-Logo.webp',
+  ]}
+>
   <main class="index-container">
     <canvas id="webgl-canvas" class="webgl-canvas"></canvas>
     <canvas id="particle-canvas" class="particle-canvas" aria-hidden="true"></canvas>
@@ -131,6 +139,10 @@ import '../styles/components/pages/index.scss';
         const mainLogo = document.querySelector('.main-logo');
         if (mainLogo) mainLogo.classList.add('sync-reveal');
       });
+
+      if (document.documentElement.dataset.skipLoadingScreen === 'true') {
+        document.querySelector('.main-logo')?.classList.add('sync-reveal');
+      }
 
       window.addEventListener('mousemove', (e) => {
         if (!container) return;

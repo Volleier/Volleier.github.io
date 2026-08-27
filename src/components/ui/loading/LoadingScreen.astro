@@ -3,6 +3,10 @@ import GildedEffect from '../effects/GildedEffect.astro';
 import '../../../styles/components/loading-screen.scss';
 ---
 
+<style is:inline>
+  html[data-skip-loading-screen="true"] #loading-screen { display: none !important; }
+</style>
+
 <div id="loading-screen" class="loading-overlay">
     <!-- Hexagonal Background Grid -->
     <div class="hex-grid-container"></div>
@@ -86,10 +90,36 @@ import '../../../styles/components/loading-screen.scss';
 </div>
 
 <script>
-    function startLoadingTimer() {
+    const homepageAssets = [
+        '/assets/default/DefaultPage.webp',
+        '/assets/default/PengLaiSiShaoXiao-Logo.webp',
+    ];
+
+    function preloadHomepageAssets() {
+        return Promise.all(homepageAssets.map((src) => new Promise((resolve) => {
+            const image = new Image();
+            image.decoding = 'async';
+            image.fetchPriority = 'high';
+            image.onload = async () => {
+                try { await image.decode(); } catch {}
+                resolve();
+            };
+            image.onerror = resolve;
+            image.src = src;
+        })));
+    }
+
+    async function startLoadingTimer() {
         const loadingScreen = document.getElementById('loading-screen');
         const nameZh = document.querySelector('.name-zh');
         if (!loadingScreen) return;
+
+        if (document.documentElement.dataset.skipLoadingScreen === 'true') {
+            document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+            return;
+        }
+
+        await preloadHomepageAssets();
 
         const hardTimeout = window.setTimeout(() => {
             loadingScreen.style.display = 'none';
