@@ -8,213 +8,170 @@ import '../../../styles/components/loading-screen.scss';
 </style>
 
 <div id="loading-screen" class="loading-overlay">
-    <!-- Hexagonal Background Grid -->
-    <div class="hex-grid-container"></div>
-
-    <!-- Rich Background Decorations -->
-    <div class="hud-decorations">
-      <!-- 1. Corner Brackets -->
-      <div class="hud-bracket top-left"></div>
-      <div class="hud-bracket bottom-right"></div>
-      
-      <!-- 2. Warning Tape -->
-      <div class="hud-warning-tape"></div>
-      
-      <!-- 3. Giant Outline Circles / Radars -->
-      <div class="hud-circle-large"></div>
-      <div class="hud-circle-small"></div>
-      
-      <!-- 4. System Boot Data Text -->
-      <div class="hud-data-column">
-        <div>SYS.INITIALIZATION</div>
-        <div>V_CORE_LOAD: TRUE</div>
-        <div>MEMORY_CHECK... OK</div>
-        <div>OVERRIDE_AUTH: PENDING</div>
-        <div>AWAITING_INPUT_SEC</div>
+  <!-- Name Block (Top Right LOGO) -->
+  <div class="name-block-outer">
+    <div class="name-block-container">
+      <div class="name-content">
+        <div class="name-images">
+          <div class="name-zh-wrapper">
+            <img src="/assets/loading/PengLaiSiShaoXiao.png" alt="PengLaiSiShaoXiao" class="name-zh" />
+          </div>
+          <div class="white-separator-container">
+            <div class="white-separator"></div>
+          </div>
+          <img src="/assets/loading/Volleier.png" alt="Volleier" class="name-en" />
+        </div>
       </div>
-      
-      <!-- 5. Dotted Technical Grid Patches -->
-      <div class="hud-dot-grid"></div>
-      
-      <!-- 6. Target Crosshairs -->
-      <div class="hud-crosshair center-left"></div>
-      <div class="hud-crosshair bottom-center"></div>
+    </div>
+  </div>
 
-      <!-- 7. Abstract Vertical Barcodes / Rectangles -->
-      <div class="hud-barcode"></div>
+  <!-- Status Bar Area (Bottom Progress Bar) -->
+  <div class="status-bar-container">
+    <div class="loading-bar">
+      <!-- Gilded Effect Overlay -->
+      <GildedEffect zIndex={1} />
     </div>
-    
-    <!-- Background Decorative Lines -->
-    <div class="decor-line h-line-top"></div>
-    <div class="decor-line v-line-right"></div>
-    
-    <!-- Status Bar Area (Bottom) -->
-    <div class="status-bar-container">
-        <div class="loading-bar">
-            <!-- Gilded Effect Overlay (Contained) -->
-            <GildedEffect zIndex={1} />
-        </div>
-        <div class="magenta-line"></div>
-    </div>
-
-    <!-- Badge Logo (Massive Scale) -->
-    <div class="badge-container">
-        <!-- Colored Accent Layer (Linear Burn Effect) -->
-        <div class="badge-accent"></div>
-        <img src="/assets/loading/Volleier-Logo.webp" alt="Badge Logo" class="badge-img" width="1200" height="904" decoding="async" fetchpriority="high" />
-    </div>
-
-    <!-- Name Block (Top Right - Complex Geometry) -->
-    <div class="name-block-outer">
-        <div class="name-block-container">
-            <div class="accent-squares">
-                <div class="square hollow"></div>
-                <!-- Extra Large Pink Square -->
-                <div class="square solid-magenta large-square"></div>
-            </div>
-            <div class="name-content">
-                <div class="trapezoid-bg"></div>
-                <div class="name-images">
-                    <div class="name-zh-wrapper">
-                        <img src="/assets/loading/PengLaiSiShaoXiao.png" alt="PengLaiSiShaoXiao" class="name-zh" />
-                    </div>
-                    <!-- Broken White Line -->
-                    <div class="white-separator-container">
-                        <div class="white-separator"></div>
-                    </div>
-                    <img src="/assets/loading/Volleier.png" alt="Volleier" class="name-en" />
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="magenta-line"></div>
+  </div>
 </div>
 
 <script>
-    const homepageAssets = [
-        '/assets/default/DefaultPage.webp',
-        '/assets/default/PengLaiSiShaoXiao-Logo.webp',
-    ];
+  const homepageAssets = [
+    '/assets/default/DefaultPage.webp',
+    '/assets/default/PengLaiSiShaoXiao-Logo.webp',
+  ];
 
-    function preloadHomepageAssets() {
-        return Promise.all(homepageAssets.map((src) => new Promise((resolve) => {
+  function preloadHomepageAssets() {
+    return Promise.all(
+      homepageAssets.map(
+        (src) =>
+          new Promise((resolve) => {
             const image = new Image();
             image.decoding = 'async';
             image.fetchPriority = 'high';
             image.onload = async () => {
-                try { await image.decode(); } catch {}
-                resolve();
+              try {
+                await image.decode();
+              } catch {}
+              resolve();
             };
             image.onerror = resolve;
             image.src = src;
-        })));
+          })
+      )
+    );
+  }
+
+  async function startLoadingTimer() {
+    const loadingScreen = document.getElementById('loading-screen');
+    const nameZh = document.querySelector('.name-zh');
+    if (!loadingScreen) return;
+
+    if (document.documentElement.dataset.skipLoadingScreen === 'true') {
+      document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
+      document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+      return;
     }
 
-    async function startLoadingTimer() {
-        const loadingScreen = document.getElementById('loading-screen');
-        const nameZh = document.querySelector('.name-zh');
-        if (!loadingScreen) return;
+    await preloadHomepageAssets();
 
-        if (document.documentElement.dataset.skipLoadingScreen === 'true') {
-            document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
-            return;
-        }
+    const hardTimeout = window.setTimeout(() => {
+      loadingScreen.style.display = 'none';
+      document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
+      document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+    }, 5500);
 
-        await preloadHomepageAssets();
+    if (!nameZh) {
+      setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        window.clearTimeout(hardTimeout);
+        document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
+        document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+      }, 2000);
+      return;
+    }
 
-        const hardTimeout = window.setTimeout(() => {
-            loadingScreen.style.display = 'none';
-            document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
-        }, 5200);
+    // 1. Lock lines extend to the top-right logo
+    setTimeout(() => {
+      const nameWrapper = document.querySelector('.name-zh-wrapper');
+      if (nameWrapper) {
+        const lockLineHLeft = document.createElement('div');
+        const lockLineHRight = document.createElement('div');
+        const lockLineVTop = document.createElement('div');
+        const lockLineVBottom = document.createElement('div');
 
-        if (!nameZh) {
-            setTimeout(() => {
-                loadingScreen.style.display = 'none';
-                window.clearTimeout(hardTimeout);
-                document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
-            }, 1800);
-            return;
-        }
+        lockLineHLeft.className = 'cinematic-lock-line line-h-left';
+        lockLineHRight.className = 'cinematic-lock-line line-h-right';
+        lockLineVTop.className = 'cinematic-lock-line line-v-top';
+        lockLineVBottom.className = 'cinematic-lock-line line-v-bottom';
 
+        nameWrapper.appendChild(lockLineHLeft);
+        nameWrapper.appendChild(lockLineHRight);
+        nameWrapper.appendChild(lockLineVTop);
+        nameWrapper.appendChild(lockLineVBottom);
+
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            lockLineHLeft.classList.add('fire');
+            lockLineHRight.classList.add('fire');
+            lockLineVTop.classList.add('fire');
+            lockLineVBottom.classList.add('fire');
+          }, 20);
+        });
+      }
+
+      // 2. Logo moves with crosshairs from top-right to the screen center
+      setTimeout(() => {
+        const rect = nameZh.getBoundingClientRect();
+
+        const flightWrapper = document.createElement('div');
+        flightWrapper.className = 'flight-wrapper';
+        flightWrapper.style.top = `${rect.top}px`;
+        flightWrapper.style.left = `${rect.left}px`;
+        flightWrapper.style.width = `${rect.width}px`;
+        flightWrapper.style.height = `${rect.height}px`;
+
+        const flyImg = document.createElement('img');
+        flyImg.src = nameZh instanceof HTMLImageElement ? nameZh.src : '';
+        flyImg.className = 'fly-img';
+
+        const flyHLeft = document.createElement('div');
+        flyHLeft.className = 'fly-lock line-h-left';
+        const flyHRight = document.createElement('div');
+        flyHRight.className = 'fly-lock line-h-right';
+        const flyVTop = document.createElement('div');
+        flyVTop.className = 'fly-lock line-v-top';
+        const flyVBottom = document.createElement('div');
+        flyVBottom.className = 'fly-lock line-v-bottom';
+
+        flightWrapper.appendChild(flyImg);
+        flightWrapper.appendChild(flyHLeft);
+        flightWrapper.appendChild(flyHRight);
+        flightWrapper.appendChild(flyVTop);
+        flightWrapper.appendChild(flyVBottom);
+        document.body.appendChild(flightWrapper);
+
+        loadingScreen.classList.add('cinematic-disintegrate');
+        void flightWrapper.offsetWidth;
+
+        const destLeft = window.innerWidth / 2 - rect.width / 2;
+        const destTop = window.innerHeight / 2 - rect.height / 2;
+        flightWrapper.style.transform = `translate(${destLeft - rect.left}px, ${destTop - rect.top}px)`;
+
+        // 3. Morph/fade to reveal main page logo, then finish
         setTimeout(() => {
-            const nameWrapper = document.querySelector('.name-zh-wrapper');
-            if (nameWrapper) {
-                const lockLineHLeft = document.createElement('div');
-                const lockLineHRight = document.createElement('div');
-                const lockLineVTop = document.createElement('div');
-                const lockLineVBottom = document.createElement('div');
+          flightWrapper.classList.add('morph-fade');
+          document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
+          window.clearTimeout(hardTimeout);
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+            flightWrapper.remove();
+            document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+          }, 600);
+        }, 1000);
+      }, 600);
+    }, 2400);
+  }
 
-                lockLineHLeft.className = 'cinematic-lock-line line-h-left';
-                lockLineHRight.className = 'cinematic-lock-line line-h-right';
-                lockLineVTop.className = 'cinematic-lock-line line-v-top';
-                lockLineVBottom.className = 'cinematic-lock-line line-v-bottom';
-
-                nameWrapper.appendChild(lockLineHLeft);
-                nameWrapper.appendChild(lockLineHRight);
-                nameWrapper.appendChild(lockLineVTop);
-                nameWrapper.appendChild(lockLineVBottom);
-
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        lockLineHLeft.classList.add('fire');
-                        lockLineHRight.classList.add('fire');
-                        lockLineVTop.classList.add('fire');
-                        lockLineVBottom.classList.add('fire');
-                    }, 20);
-                });
-            }
-
-            setTimeout(() => {
-                const rect = nameZh.getBoundingClientRect();
-
-                const flightWrapper = document.createElement('div');
-                flightWrapper.className = 'flight-wrapper';
-                flightWrapper.style.top = `${rect.top}px`;
-                flightWrapper.style.left = `${rect.left}px`;
-                flightWrapper.style.width = `${rect.width}px`;
-                flightWrapper.style.height = `${rect.height}px`;
-
-                const flyImg = document.createElement('img');
-                flyImg.src = nameZh instanceof HTMLImageElement ? nameZh.src : '';
-                flyImg.className = 'fly-img';
-
-                const flyHLeft = document.createElement('div');
-                flyHLeft.className = 'fly-lock line-h-left';
-                const flyHRight = document.createElement('div');
-                flyHRight.className = 'fly-lock line-h-right';
-                const flyVTop = document.createElement('div');
-                flyVTop.className = 'fly-lock line-v-top';
-                const flyVBottom = document.createElement('div');
-                flyVBottom.className = 'fly-lock line-v-bottom';
-
-                flightWrapper.appendChild(flyImg);
-                flightWrapper.appendChild(flyHLeft);
-                flightWrapper.appendChild(flyHRight);
-                flightWrapper.appendChild(flyVTop);
-                flightWrapper.appendChild(flyVBottom);
-                document.body.appendChild(flightWrapper);
-
-                loadingScreen.classList.add('cinematic-disintegrate');
-                void flightWrapper.offsetWidth;
-
-                const destLeft = window.innerWidth / 2 - rect.width / 2;
-                const destTop = window.innerHeight / 2 - rect.height / 2;
-                flightWrapper.style.transform = `translate(${destLeft - rect.left}px, ${destTop - rect.top}px)`;
-
-                setTimeout(() => {
-                    flightWrapper.classList.add('morph-fade');
-                    document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
-                    window.clearTimeout(hardTimeout);
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                        flightWrapper.remove();
-                        document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
-                    }, 600);
-                }, 1000);
-            }, 600);
-        }, 3000);
-    }
-
-    startLoadingTimer();
+  startLoadingTimer();
 </script>
-
-
