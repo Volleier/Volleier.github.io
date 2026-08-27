@@ -13,6 +13,15 @@
   overflow: hidden;
   font-family: 'Inter', system-ui, sans-serif;
 
+  &.is-entering-from-bottom {
+    animation: about-slide-in 860ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  &.is-leaving-to-home {
+    animation: about-slide-away 620ms cubic-bezier(0.92, 0.02, 0.22, 0.96) forwards;
+    pointer-events: none;
+  }
+
   &.is-focus-mode {
     .about-card {
       cursor: zoom-in;
@@ -25,6 +34,18 @@
       }
     }
   }
+}
+
+@keyframes about-slide-in {
+  0% { transform: translate3d(0, 115vh, 0); }
+  62% { transform: translate3d(0, -2.5vh, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes about-slide-away {
+  0% { transform: translate3d(0, 0, 0); }
+  58% { transform: translate3d(0, 112vh, 0); }
+  100% { transform: translate3d(0, 155vh, 0); }
 }
 
 .canvas-viewport {

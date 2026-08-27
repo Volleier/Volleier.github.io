@@ -45,7 +45,7 @@ const renderedCards = await Promise.all(
     <div class="serif serif-top"></div>
     <div class="serif serif-bottom">
       <div class="canvas-controls">
-        <a href="/" class="ctrl-btn btn-return">
+        <a href="/" class="ctrl-btn btn-return" data-page-transition="home">
           <span class="ctrl-icon"><svg viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
           <span class="ctrl-label">RETURN</span>
         </a>
@@ -73,6 +73,38 @@ const renderedCards = await Promise.all(
       const viewport = document.getElementById('about-canvas');
       const canvas = document.getElementById('about-canvas-content');
       if (!root || !viewport || !canvas) return;
+
+      const returnLink = document.querySelector('[data-page-transition="home"]');
+      if (returnLink) {
+        returnLink.addEventListener('click', (event) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) return;
+
+          const destination = returnLink.getAttribute('href');
+          if (!destination) return;
+
+          event.preventDefault();
+          try { window.sessionStorage.setItem('volleier:index-transition', '1'); } catch {}
+          root.classList.add('is-leaving-to-home');
+          window.setTimeout(() => { window.location.assign(destination); }, 620);
+        });
+      }
+
+      let shouldAnimateEntry = false;
+      try {
+        shouldAnimateEntry = window.sessionStorage.getItem('volleier:about-transition') === '1';
+        if (shouldAnimateEntry) window.sessionStorage.removeItem('volleier:about-transition');
+      } catch {}
+      if (shouldAnimateEntry && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        root.classList.add('is-entering-from-bottom');
+        root.addEventListener('animationend', () => root.classList.remove('is-entering-from-bottom'), { once: true });
+      }
 
       const gridSize = Number(root.dataset.gridSize || 24);
       const cards = Array.from(canvas.querySelectorAll('[data-card]'));

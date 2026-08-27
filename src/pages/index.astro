@@ -5,6 +5,7 @@ import '../styles/components/pages/index.scss';
 <BaseLayout showNav={false} showFooter={false} showLoading={true} preloadImage="/assets/default/DefaultPage.webp">
   <main class="index-container">
     <canvas id="webgl-canvas" class="webgl-canvas"></canvas>
+    <canvas id="particle-canvas" class="particle-canvas" aria-hidden="true"></canvas>
 
     <!-- Subdued Graphic Decorations -->
     <div class="decor-layer">
@@ -65,7 +66,7 @@ import '../styles/components/pages/index.scss';
       </div>
       <!-- Industrial Buttons Container -->
       <div class="button-group">
-        <a href="/intro/about" class="tech-button">
+        <a href="/intro/about" class="tech-button" data-page-transition="about">
           <span class="btn-bracket btn-bracket-left"></span>
           <div class="btn-content">
             <span class="tech-tag">CMD_01 //</span>
@@ -93,6 +94,38 @@ import '../styles/components/pages/index.scss';
       const container = document.querySelector('.index-container');
       const coordX = document.getElementById('coord-x');
       const coordY = document.getElementById('coord-y');
+
+      try {
+        if (window.sessionStorage.getItem('volleier:index-transition') === '1') {
+          window.sessionStorage.removeItem('volleier:index-transition');
+          if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && container) {
+            container.classList.add('is-entering-from-top');
+            container.addEventListener('animationend', () => container.classList.remove('is-entering-from-top'), { once: true });
+          }
+        }
+      } catch {}
+
+      const aboutLink = document.querySelector('[data-page-transition="about"]');
+      if (aboutLink && container) {
+        aboutLink.addEventListener('click', (event) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey
+          ) return;
+
+          const destination = aboutLink.getAttribute('href');
+          if (!destination) return;
+
+          event.preventDefault();
+          try { window.sessionStorage.setItem('volleier:about-transition', '1'); } catch {}
+          container.classList.add('is-leaving-for-about');
+          window.setTimeout(() => { window.location.assign(destination); }, 620);
+        });
+      }
 
       document.addEventListener('LoadingSequenceMorph', () => {
         const mainLogo = document.querySelector('.main-logo');
@@ -278,6 +311,65 @@ import '../styles/components/pages/index.scss';
         };
       }
       initExperimentalWebGL(document.getElementById('webgl-canvas'));
+
+      // Interactive particle field: mouse repulsion, glow, and scroll-driven drift.
+      function initParticleField(cvs) {
+        if (!cvs) return;
+        const ctx = cvs.getContext('2d');
+        if (!ctx) return;
+        const pointer = { x: -9999, y: -9999 };
+        let particles = [], width = 0, height = 0, scrollTarget = 0, scrollValue = 0, wheelTimer;
+        // Keep the field visibly full while capping work on very large screens.
+        const density = () => Math.min(300, Math.max(110, Math.round((width * height) / 7000)));
+        const resize = () => {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          width = window.innerWidth;
+          height = window.innerHeight;
+          cvs.width = width * dpr; cvs.height = height * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          particles = Array.from({ length: density() }, () => ({
+            x: Math.random() * width, y: Math.random() * height,
+            vx: (Math.random() - .5) * .18, vy: (Math.random() - .5) * .12,
+            fallSpeed: Math.random() * .22 + .06,
+            r: Math.random() * 1.7 + .45, phase: Math.random() * Math.PI * 2
+          }));
+        };
+        const move = (e) => { pointer.x = e.clientX; pointer.y = e.clientY; };
+        const leave = () => { pointer.x = pointer.y = -9999; };
+        const scroll = () => { scrollTarget = window.scrollY || 0; };
+        const wheel = (e) => {
+          scrollTarget = Math.max(-900, Math.min(900, scrollTarget + e.deltaY * .55));
+          container?.style.setProperty('--scroll-shift', `${Math.max(-26, Math.min(26, -scrollTarget * .035))}px`);
+          clearTimeout(wheelTimer);
+          wheelTimer = setTimeout(() => { scrollTarget = 0; container?.style.setProperty('--scroll-shift', '0px'); }, 180);
+        };
+        const render = (time) => {
+          scrollValue += (scrollTarget - scrollValue) * .06;
+          ctx.clearRect(0, 0, width, height);
+          const drift = scrollValue * .035;
+          particles.forEach((p) => {
+            const dx = p.x - pointer.x, dy = p.y - pointer.y, dist = Math.hypot(dx, dy);
+            if (dist < 150 && dist > 0) { const force = (150 - dist) / 150 * .45; p.vx += dx / dist * force; p.vy += dy / dist * force; }
+            p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy + p.fallSpeed;
+            if (p.x < -20) p.x = width + 20; if (p.x > width + 20) p.x = -20;
+            if (p.y < -20) p.y = height + 20; if (p.y > height + 20) p.y = -20;
+            const y = p.y - drift, pulse = .65 + Math.sin(time * .001 + p.phase) * .2;
+            ctx.beginPath(); ctx.arc(p.x, y, p.r, 0, Math.PI * 2); ctx.fillStyle = `rgba(0,255,204,${pulse})`; ctx.fill();
+          });
+          for (let i = 0; i < particles.length; i++) for (let j = i + 1; j < particles.length; j++) {
+            const a = particles[i], b = particles[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
+            if (d < 105) { ctx.strokeStyle = `rgba(110,190,180,${(1 - d / 105) * .18})`; ctx.lineWidth = .6; ctx.beginPath(); ctx.moveTo(a.x, a.y - drift); ctx.lineTo(b.x, b.y - drift); ctx.stroke(); }
+          }
+          requestAnimationFrame(render);
+        };
+        resize();
+        window.addEventListener('resize', resize);
+        if (window.ResizeObserver) new ResizeObserver(resize).observe(cvs);
+        window.addEventListener('mousemove', move, { passive: true });
+        window.addEventListener('mouseleave', leave); window.addEventListener('scroll', scroll, { passive: true });
+        window.addEventListener('wheel', wheel, { passive: true }); requestAnimationFrame(render);
+      }
+      initParticleField(document.getElementById('particle-canvas'));
 
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) return;
