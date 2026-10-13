@@ -1,23 +1,60 @@
 ---
 import GildedEffect from '../effects/GildedEffect.astro';
+import SlatOceanEffect from '../effects/SlatOceanEffect.astro';
 import '../../../styles/components/loading-screen.scss';
+
+// Temporary pin so hex loading can be reviewed; set false for normal load → home.
+const PIN_HEX_LOADING = true;
 ---
 
-<style is:inline>
-  html[data-skip-loading-screen="true"] #loading-screen { display: none !important; }
-</style>
+{PIN_HEX_LOADING && (
+  <style is:inline>
+    #loading-screen { display: block !important; opacity: 1 !important; visibility: visible !important; }
+  </style>
+)}
 
-<div id="loading-screen" class="loading-overlay">
-  <!-- Framing Serifs (Matches Main Page Design) -->
+<div
+  id="loading-screen"
+  class="loading-overlay loading-overlay--hex-only"
+  data-pin-hex={PIN_HEX_LOADING ? 'true' : 'false'}
+>
+  <!-- Locked cyan honeycomb look (from tuned debug snapshot) -->
+  <SlatOceanEffect
+    zIndex={1}
+    preset="swell"
+    scale={0.2}
+    speed={1}
+    contrast={2.2}
+    glint={0.25}
+    chop={0.8}
+    stretch={0}
+    perspective={1}
+    fog={0.45}
+    slatWidth={10}
+    slatHeight={10}
+    gap={1.5}
+    cursorSize={85}
+    intro={false}
+    followTheme={false}
+    color="#00FFCC"
+    glintColor="#0088FF"
+    backgroundColor="transparent"
+    interactive={true}
+    logoText="Volleier"
+    logoColor="#00ffe2"
+    logoScale={1}
+    progress={0}
+    barWidth={0.62}
+    outro={0}
+  />
+
+  <!-- Original chrome kept in DOM for timing/morph, visually hidden in hex-only mode -->
   <div class="serif serif-top"></div>
   <div class="serif serif-bottom"></div>
   <div class="serif serif-left"></div>
   <div class="serif serif-right"></div>
-
-  <!-- Faint Watermark (Matches Main Page Design) -->
   <div class="loading-watermark">VOLLEIER</div>
 
-  <!-- Name Block (Top Right Industrial Tech Card) -->
   <div class="name-block-outer">
     <div class="name-tech-card">
       <div class="card-bracket bracket-tl"></div>
@@ -38,7 +75,6 @@ import '../../../styles/components/loading-screen.scss';
     </div>
   </div>
 
-  <!-- Bottom Industrial Progress Panel (Matches Main Page Design) -->
   <div class="status-bar-container">
     <div class="progress-panel">
       <div class="progress-meta">
@@ -52,7 +88,6 @@ import '../../../styles/components/loading-screen.scss';
       </div>
       <div class="loading-bar-wrapper">
         <div class="loading-bar">
-          <!-- Gilded Effect Overlay -->
           <GildedEffect zIndex={1} />
         </div>
         <div class="magenta-line"></div>
@@ -88,10 +123,142 @@ import '../../../styles/components/loading-screen.scss';
     );
   }
 
+  function runHexLoad(loadingScreen: HTMLElement) {
+    const canvas = loadingScreen.querySelector('.slat-ocean-canvas') as HTMLCanvasElement | null;
+    const pinned = loadingScreen.dataset.pinHex === 'true';
+    const MIN_MS = 3000;
+    const OUTRO_MS = 1400;
+    let imageScore = homepageAssets.length === 0 ? 1 : 0;
+    let fontScore = 0;
+    let loadScore = document.readyState === 'complete' ? 1 : 0;
+
+    const total = Math.max(1, homepageAssets.length);
+    let imagesDone = 0;
+    homepageAssets.forEach((src) => {
+      const image = new Image();
+      const done = () => {
+        imagesDone += 1;
+        imageScore = imagesDone / total;
+      };
+      image.decoding = 'async';
+      image.onload = () => {
+        image.decode().then(done, done);
+      };
+      image.onerror = done;
+      image.src = src;
+    });
+
+    const fonts = (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts;
+    if (fonts?.ready) fonts.ready.then(() => { fontScore = 1; }, () => { fontScore = 1; });
+    else fontScore = 1;
+
+    if (loadScore < 1) {
+      window.addEventListener('load', () => { loadScore = 1; }, { once: true });
+    }
+
+    const realReady = () => imageScore * 0.6 + fontScore * 0.15 + loadScore * 0.25 >= 0.999;
+
+    let start = 0;
+    let mode: 'curve' | 'wait' | 'fill' | 'outro' | 'hold' = 'curve';
+    let fillFrom = 0;
+    let mark = 0;
+    let shown = 0;
+    let outro = 0;
+
+    const push = () => {
+      const api = (canvas as HTMLCanvasElement & { _zV?: { apply: (p: Record<string, number>) => void } })?._zV;
+      if (api) api.apply({ progress: shown, outro });
+    };
+
+    const finish = () => {
+      loadingScreen.classList.add('fade-out');
+      document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
+      window.setTimeout(() => {
+        loadingScreen.style.display = 'none';
+        document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+      }, 800);
+    };
+
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const t = Math.min(1, Math.max(0, elapsed / MIN_MS));
+      const eased = 1 - Math.pow(1 - t, 3);
+      const ready = realReady();
+
+      if (mode === 'curve') {
+        shown = eased * (ready ? 1 : 0.92);
+        outro = 0;
+        if (elapsed >= MIN_MS) {
+          if (ready && shown >= 0.999) {
+            shown = 1;
+            mode = 'outro';
+            mark = now;
+          } else if (ready) {
+            fillFrom = shown;
+            mode = 'fill';
+            mark = now;
+          } else {
+            mode = 'wait';
+          }
+        }
+      } else if (mode === 'wait') {
+        shown = Math.min(0.97, 0.92 + (elapsed - MIN_MS) / 1000 * 0.015);
+        if (ready) {
+          fillFrom = shown;
+          mode = 'fill';
+          mark = now;
+        }
+      } else if (mode === 'fill') {
+        const u = Math.min(1, (now - mark) / 200);
+        shown = fillFrom + (1 - fillFrom) * u;
+        if (u >= 1) {
+          shown = 1;
+          mode = 'outro';
+          mark = now;
+        }
+      } else if (mode === 'outro') {
+        shown = 1;
+        outro = Math.min(1, (now - mark) / OUTRO_MS);
+        if (outro >= 1) {
+          if (pinned) {
+            mode = 'hold';
+            mark = now;
+          } else {
+            push();
+            finish();
+            return;
+          }
+        }
+      } else if (mode === 'hold') {
+        shown = 1;
+        outro = 1;
+        if (now - mark > 500) {
+          start = now;
+          shown = 0;
+          outro = 0;
+          mode = 'curve';
+        }
+      }
+
+      push();
+      requestAnimationFrame(tick);
+    };
+
+    const boot = () => {
+      const api = (canvas as HTMLCanvasElement & { _zV?: unknown })?._zV;
+      if (!api) {
+        requestAnimationFrame(boot);
+        return;
+      }
+      start = performance.now();
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(boot);
+  }
+
   async function startLoadingTimer() {
     const loadingScreen = document.getElementById('loading-screen');
     const nameZh = document.querySelector('.name-zh');
-    const percentElem = document.getElementById('loading-percent');
     if (!loadingScreen) return;
 
     if (document.documentElement.dataset.skipLoadingScreen === 'true') {
@@ -100,9 +267,14 @@ import '../../../styles/components/loading-screen.scss';
       return;
     }
 
-    // Dynamic percentage counter synchronized with GildedEffect loading curve
+    if (loadingScreen.classList.contains('loading-overlay--hex-only')) {
+      runHexLoad(loadingScreen);
+      return;
+    }
+
     const startTime = performance.now();
     const duration = 2400;
+    const percentElem = document.getElementById('loading-percent');
     let animFrame = 0;
 
     function updatePercent(now: number) {
@@ -119,6 +291,10 @@ import '../../../styles/components/loading-screen.scss';
     }
     animFrame = requestAnimationFrame(updatePercent);
 
+    if (loadingScreen.dataset.pinHex === 'true') {
+      return;
+    }
+
     await preloadHomepageAssets();
 
     const hardTimeout = window.setTimeout(() => {
@@ -126,6 +302,20 @@ import '../../../styles/components/loading-screen.scss';
       document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
       document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
     }, 5500);
+
+    // Hex-only: skip cinematic chrome morph; fade straight to home.
+    if (loadingScreen.classList.contains('loading-overlay--hex-only')) {
+      window.setTimeout(() => {
+        loadingScreen.classList.add('fade-out');
+        document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
+        window.clearTimeout(hardTimeout);
+        window.setTimeout(() => {
+          loadingScreen.style.display = 'none';
+          document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
+        }, 800);
+      }, 2600);
+      return;
+    }
 
     if (!nameZh) {
       setTimeout(() => {
@@ -137,7 +327,6 @@ import '../../../styles/components/loading-screen.scss';
       return;
     }
 
-    // 1. Extend laser tracking lines to lock onto the top-right logo
     setTimeout(() => {
       const nameWrapper = document.querySelector('.name-zh-wrapper');
       if (nameWrapper) {
@@ -166,7 +355,6 @@ import '../../../styles/components/loading-screen.scss';
         });
       }
 
-      // 2. Logo and crosshairs fly smoothly from top-right to exact screen center
       setTimeout(() => {
         const rect = nameZh.getBoundingClientRect();
 
@@ -204,7 +392,6 @@ import '../../../styles/components/loading-screen.scss';
         const destTop = window.innerHeight / 2 - rect.height / 2;
         flightWrapper.style.transform = `translate(${destLeft - rect.left}px, ${destTop - rect.top}px)`;
 
-        // 3. Morph/fade to reveal main page logo seamlessly, then complete
         setTimeout(() => {
           flightWrapper.classList.add('morph-fade');
           document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));

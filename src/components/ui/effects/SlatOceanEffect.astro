@@ -1,0 +1,1472 @@
+---
+// SlatOceanEffect.astro - Exact 1:1 reproduction of the zV React Component from Right Code
+interface Props {
+  zIndex?: number;
+  preset?: 'swell' | 'tide' | 'storm' | 'signal';
+  color?: string;
+  glintColor?: string;
+  backgroundColor?: string;
+  scale?: number;
+  speed?: number;
+  direction?: number;
+  chop?: number;
+  stretch?: number;
+  glint?: number;
+  contrast?: number;
+  perspective?: number;
+  fog?: number;
+  slatWidth?: number;
+  slatHeight?: number;
+  gap?: number;
+  roundness?: number;
+  interactive?: boolean;
+  cursorStrength?: number;
+  cursorSize?: number;
+  swirl?: number;
+  trail?: number;
+  lean?: number;
+  intro?: boolean;
+  introDuration?: number;
+  /** When true, color/glint follow --slat-ocean-* CSS vars (light/dark). */
+  followTheme?: boolean;
+  /** External pause switch (also pauses when offscreen / hidden / reduced-motion). */
+  paused?: boolean;
+  opacity?: number;
+  class?: string;
+  /** Center hexes spell this word (e.g. Volleier) with dissolve spray. */
+  logoText?: string;
+  logoColor?: string;
+  logoScale?: number;
+  /** 0..1 fills the hex bar. Negative hides it. */
+  progress?: number;
+  /** Bar width as a fraction of the word box width. */
+  barWidth?: number;
+  /** 0..1 completion: flash, word sweep, then cell dissolve. */
+  outro?: number;
+}
+
+const {
+  zIndex = 1,
+  preset = 'swell',
+  color = '#A855F7',
+  glintColor = '#FFFFFF',
+  backgroundColor = 'transparent',
+  scale = 0.9,
+  speed,
+  direction,
+  chop,
+  stretch,
+  glint = 0.9,
+  contrast = 1.7,
+  perspective,
+  fog,
+  slatWidth = 8,
+  slatHeight = 22,
+  gap = 3,
+  roundness = 0.75,
+  interactive = true,
+  cursorStrength = 1,
+  cursorSize = 36,
+  swirl = 0.8,
+  trail = 1.4,
+  lean = 1.0,
+  intro = true,
+  introDuration = 1.8,
+  followTheme = true,
+  paused = false,
+  opacity = 1,
+  class: className = '',
+  logoText = '',
+  logoColor = '#00ffe2',
+  logoScale = 1,
+  progress = -1,
+  barWidth = 0.62,
+  outro = 0,
+} = Astro.props;
+
+import '../../../styles/components/effects/slat-ocean.scss';
+
+const containerClass = ['slat-ocean-container', className].filter(Boolean).join(' ');
+---
+
+<div
+  class={containerClass}
+  style={`z-index: ${zIndex}; opacity: ${opacity};`}
+  data-follow-theme={followTheme ? 'true' : 'false'}
+  data-paused={paused ? 'true' : 'false'}
+>
+  <canvas
+    class="slat-ocean-canvas"
+    data-preset={preset}
+    data-color={color}
+    data-glint-color={glintColor}
+    data-background-color={backgroundColor}
+    data-scale={scale !== undefined ? String(scale) : ''}
+    data-speed={speed !== undefined ? String(speed) : ''}
+    data-direction={direction !== undefined ? String(direction) : ''}
+    data-chop={chop !== undefined ? String(chop) : ''}
+    data-stretch={stretch !== undefined ? String(stretch) : ''}
+    data-glint={glint !== undefined ? String(glint) : ''}
+    data-contrast={contrast !== undefined ? String(contrast) : ''}
+    data-perspective={perspective !== undefined ? String(perspective) : ''}
+    data-fog={fog !== undefined ? String(fog) : ''}
+    data-slat-w={slatWidth !== undefined ? String(slatWidth) : ''}
+    data-slat-h={slatHeight !== undefined ? String(slatHeight) : ''}
+    data-gap={gap !== undefined ? String(gap) : ''}
+    data-roundness={roundness !== undefined ? String(roundness) : ''}
+    data-interactive={interactive ? 'true' : 'false'}
+    data-cursor-strength={cursorStrength !== undefined ? String(cursorStrength) : ''}
+    data-cursor-size={cursorSize !== undefined ? String(cursorSize) : ''}
+    data-swirl={swirl !== undefined ? String(swirl) : ''}
+    data-trail={trail !== undefined ? String(trail) : ''}
+    data-lean={lean !== undefined ? String(lean) : ''}
+    data-intro={intro ? 'true' : 'false'}
+    data-intro-duration={introDuration !== undefined ? String(introDuration) : ''}
+    data-logo-text={logoText || ''}
+    data-logo-color={logoColor}
+    data-logo-scale={logoScale !== undefined ? String(logoScale) : ''}
+    data-progress={progress !== undefined ? String(progress) : ''}
+    data-bar-width={barWidth !== undefined ? String(barWidth) : ''}
+    data-outro={outro !== undefined ? String(outro) : ''}
+  ></canvas>
+</div>
+
+<script>
+  function initSlatOceanExact() {
+    const canvases = document.querySelectorAll('.slat-ocean-canvas') as NodeListOf<HTMLCanvasElement>;
+
+    canvases.forEach((canvas) => {
+      if ((canvas as any)._zV_initialized) return;
+      (canvas as any)._zV_initialized = true;
+
+      const gl = canvas.getContext('webgl2', {
+        alpha: true,
+        antialias: false,
+        depth: false,
+        stencil: false,
+        powerPreference: 'high-performance',
+      }) as WebGL2RenderingContext | null;
+
+      if (!gl) {
+        console.warn('WebGL2 not supported');
+        return;
+      }
+
+      // 1:1 Presets & Constants from zV
+      const BT: Record<string, any> = {
+        swell: { scale: 1.5, speed: 0.6, direction: 250, chop: 0.55, stretch: 0, glint: 0.7, contrast: 1.25, perspective: 0.55, fog: 0.55 },
+        tide:  { scale: 1.3, speed: 0.5, direction: 262, chop: 0.2, stretch: 0.12, glint: 0.45, contrast: 1.1, perspective: 0.5, fog: 0.4 },
+        storm: { scale: 0.55, speed: 1.6, direction: 236, chop: 1, stretch: 0.3, glint: 1.3, contrast: 1.8, perspective: 0.8, fog: 0.35 },
+        signal:{ scale: 0.85, speed: 1.2, direction: 180, chop: 0.6, stretch: 0.85, glint: 0.25, contrast: 1.2, perspective: 0, fog: 0 },
+      };
+
+      const Np = 96;
+      const Y0e = 16;
+      const nv = 6900;
+      const _T = 3;
+      const W0e = 45e5;
+
+      const di = (e: number, t: number, n: number) => Math.min(Math.max(e, t), n);
+
+      const iv = (e: string, t: [number, number, number, number]): [number, number, number, number] => {
+        try {
+          const n = document.createElement('canvas').getContext('2d');
+          if (!n) return t;
+          n.fillStyle = '#000000';
+          n.fillStyle = e;
+          const i = n.fillStyle;
+          if (i.startsWith('#')) {
+            const l = parseInt(i.slice(1), 16);
+            return [((l >> 16) & 255) / 255, ((l >> 8) & 255) / 255, (l & 255) / 255, 1];
+          }
+          const r = i.match(/[\d.]+/g);
+          return !r || r.length < 3
+            ? t
+            : [Number(r[0]) / 255, Number(r[1]) / 255, Number(r[2]) / 255, r[3] ? Number(r[3]) : 1];
+        } catch {
+          return t;
+        }
+      };
+
+      // Read props from dataset with fallback to zV defaults
+      const container = (canvas.closest('.slat-ocean-container') as HTMLElement) || canvas.parentElement || canvas;
+      const presetKey = canvas.dataset.preset || 'swell';
+      const q = BT[presetKey] || BT.swell;
+      const H = (val: string | undefined, key: string) =>
+        val !== undefined && val !== '' ? parseFloat(val) : q[key];
+
+      const followTheme = container.dataset.followTheme !== 'false';
+      const color = iv(canvas.dataset.color || '#A855F7', [0.659, 0.333, 0.969, 1]);
+      const glintColor = iv(canvas.dataset.glintColor || '#FFFFFF', [1, 1, 1, 1]);
+      const backgroundColor = iv(canvas.dataset.backgroundColor || 'transparent', [0, 0, 0, 0]);
+
+      const props = {
+        preset: presetKey,
+        color,
+        glintColor,
+        backgroundColor,
+        followTheme,
+        slatWidth: parseFloat(canvas.dataset.slatW || '8') || 8,
+        slatHeight: parseFloat(canvas.dataset.slatH || '22') || 22,
+        gap: parseFloat(canvas.dataset.gap || '3') || 3,
+        roundness: parseFloat(canvas.dataset.roundness || '0.75') || 0.75,
+        scale: H(canvas.dataset.scale, 'scale'),
+        speed: H(canvas.dataset.speed, 'speed'),
+        direction: H(canvas.dataset.direction, 'direction'),
+        chop: H(canvas.dataset.chop, 'chop'),
+        stretch: H(canvas.dataset.stretch, 'stretch'),
+        glint: H(canvas.dataset.glint, 'glint'),
+        contrast: H(canvas.dataset.contrast, 'contrast'),
+        perspective: H(canvas.dataset.perspective, 'perspective'),
+        fog: H(canvas.dataset.fog, 'fog'),
+        interactive: canvas.dataset.interactive !== 'false',
+        cursorStrength: parseFloat(canvas.dataset.cursorStrength || '1') || 1,
+        cursorSize: parseFloat(canvas.dataset.cursorSize || '36') || 36,
+        swirl: parseFloat(canvas.dataset.swirl || '0.8') || 0.8,
+        trail: parseFloat(canvas.dataset.trail || '1.4') || 1.4,
+        lean: parseFloat(canvas.dataset.lean || '1.0') || 1.0,
+        intro: canvas.dataset.intro !== 'false',
+        introDuration: parseFloat(canvas.dataset.introDuration || '1.8') || 1.8,
+        logoText: (canvas.dataset.logoText || '').trim(),
+        logoColor: iv(canvas.dataset.logoColor || '#00ffe2', [0, 1, 0.886, 1]),
+        logoScale: parseFloat(canvas.dataset.logoScale || '1') || 1,
+        progress: canvas.dataset.progress === undefined || canvas.dataset.progress === ''
+          ? -1
+          : parseFloat(canvas.dataset.progress),
+        barWidth: parseFloat(canvas.dataset.barWidth || '0.62') || 0.62,
+        outro: parseFloat(canvas.dataset.outro || '0') || 0,
+      };
+
+      // Shaders (1:1 identical to zV source)
+      const OT = `#version 300 es
+in vec2 position;
+void main() {
+  gl_Position = vec4(position, 0.0, 1.0);
+}
+`;
+
+      const q0e = `#version 300 es
+in vec2 position;
+uniform vec2 uTexel;
+out vec2 vUv;
+out vec2 vL;
+out vec2 vR;
+out vec2 vT;
+out vec2 vB;
+void main() {
+  vUv = position * 0.5 + 0.5;
+  vL = vUv - vec2(uTexel.x, 0.0);
+  vR = vUv + vec2(uTexel.x, 0.0);
+  vT = vUv + vec2(0.0, uTexel.y);
+  vB = vUv - vec2(0.0, uTexel.y);
+  gl_Position = vec4(position, 0.0, 1.0);
+}
+`;
+
+      const xs = `#version 300 es
+precision highp float;
+in vec2 vUv;
+in vec2 vL;
+in vec2 vR;
+in vec2 vT;
+in vec2 vB;
+out vec4 fragColor;
+`;
+
+      const Z0e = `${xs}
+uniform sampler2D uTarget;
+uniform float uAspect;
+uniform vec2 uPoint;
+uniform vec3 uValue;
+uniform float uRadius;
+void main() {
+  vec2 offset = vUv - uPoint;
+  offset.x *= uAspect;
+  float falloff = exp(-dot(offset, offset) / uRadius);
+  fragColor = vec4(texture(uTarget, vUv).xyz + uValue * falloff, 1.0);
+}
+`;
+
+      const X0e = `${xs}
+uniform sampler2D uVelocity;
+void main() {
+  float left = texture(uVelocity, vL).y;
+  float right = texture(uVelocity, vR).y;
+  float top = texture(uVelocity, vT).x;
+  float bottom = texture(uVelocity, vB).x;
+  fragColor = vec4(0.5 * (right - left - top + bottom), 0.0, 0.0, 1.0);
+}
+`;
+
+      const Q0e = `${xs}
+uniform sampler2D uVelocity;
+uniform sampler2D uCurl;
+uniform float uSwirl;
+uniform float uDt;
+void main() {
+  float left = texture(uCurl, vL).x;
+  float right = texture(uCurl, vR).x;
+  float top = texture(uCurl, vT).x;
+  float bottom = texture(uCurl, vB).x;
+  float middle = texture(uCurl, vUv).x;
+  vec2 force = 0.5 * vec2(abs(top) - abs(bottom), abs(right) - abs(left));
+  force = force / (length(force) + 0.0001) * uSwirl * middle;
+  force.y = -force.y;
+  vec2 velocity = texture(uVelocity, vUv).xy + force * uDt;
+  fragColor = vec4(clamp(velocity, -1000.0, 1000.0), 0.0, 1.0);
+}
+`;
+
+      const J0e = `${xs}
+uniform sampler2D uVelocity;
+void main() {
+  vec2 middle = texture(uVelocity, vUv).xy;
+  float left = vL.x < 0.0 ? -middle.x : texture(uVelocity, vL).x;
+  float right = vR.x > 1.0 ? -middle.x : texture(uVelocity, vR).x;
+  float top = vT.y > 1.0 ? -middle.y : texture(uVelocity, vT).y;
+  float bottom = vB.y < 0.0 ? -middle.y : texture(uVelocity, vB).y;
+  fragColor = vec4(0.5 * (right - left + top - bottom), 0.0, 0.0, 1.0);
+}
+`;
+
+      const ebe = `${xs}
+uniform sampler2D uPressure;
+uniform sampler2D uDivergence;
+void main() {
+  float left = texture(uPressure, vL).x;
+  float right = texture(uPressure, vR).x;
+  float top = texture(uPressure, vT).x;
+  float bottom = texture(uPressure, vB).x;
+  float divergence = texture(uDivergence, vUv).x;
+  fragColor = vec4((left + right + top + bottom - divergence) * 0.25, 0.0, 0.0, 1.0);
+}
+`;
+
+      const tbe = `${xs}
+uniform sampler2D uPressure;
+uniform sampler2D uVelocity;
+void main() {
+  float left = texture(uPressure, vL).x;
+  float right = texture(uPressure, vR).x;
+  float top = texture(uPressure, vT).x;
+  float bottom = texture(uPressure, vB).x;
+  vec2 velocity = texture(uVelocity, vUv).xy - vec2(right - left, top - bottom);
+  fragColor = vec4(velocity, 0.0, 1.0);
+}
+`;
+
+      const nbe = `${xs}
+uniform sampler2D uVelocity;
+uniform sampler2D uSource;
+uniform vec2 uTexel;
+uniform float uDt;
+uniform float uFade;
+void main() {
+  vec2 from = vUv - uDt * texture(uVelocity, vUv).xy * uTexel;
+  fragColor = texture(uSource, from) / (1.0 + uFade * uDt);
+}
+`;
+
+      const ibe = `${xs}
+uniform sampler2D uSource;
+uniform float uValue;
+void main() {
+  fragColor = texture(uSource, vUv) * uValue;
+}
+`;
+
+      // Word scatter field: xy = displacement (fraction of height, uv space), z = disturbance
+      const sbe = `${xs}
+uniform sampler2D uVelocity;
+uniform sampler2D uSource;
+uniform vec2 uTexel;
+uniform float uDt;
+uniform float uDecay;
+void main() {
+  vec2 from = vUv - uDt * texture(uVelocity, vUv).xy * uTexel * 0.6;
+  vec4 s = texture(uSource, from) * exp(-uDecay * uDt);
+  vec2 d = s.xy;
+  float l = length(d);
+  if (l > 0.3) d *= 0.3 / l;
+  fragColor = vec4(d, clamp(s.z, 0.0, 1.2), 1.0);
+}
+`;
+
+      const rbe = `#version 300 es
+precision highp float;
+uniform vec2 uSize;
+uniform vec4 uGrid;
+uniform vec2 uOrigin;
+uniform vec2 uSlat;
+uniform float uTime;
+uniform float uScale;
+uniform float uDirection;
+uniform float uChop;
+uniform float uStretch;
+uniform float uGlint;
+uniform float uContrast;
+uniform float uPerspective;
+uniform float uFog;
+uniform float uIntro;
+uniform sampler2D tVelocity;
+uniform sampler2D tInk;
+uniform sampler2D tLogo;
+uniform sampler2D tScatter;
+uniform float uScatter;
+uniform vec2 uFluidTexel;
+uniform float uFluid;
+uniform float uInk;
+uniform float uLean;
+uniform float uLogo;
+uniform vec2 uLogoBox;
+uniform float uProgress;
+uniform vec4 uBar;
+uniform float uOutro;
+out vec4 fragColor;
+
+float hash21(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  float a = hash21(i);
+  float b = hash21(i + vec2(1.0, 0.0));
+  float c = hash21(i + vec2(0.0, 1.0));
+  float d = hash21(i + vec2(1.0, 1.0));
+  return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float fbm(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  mat2 m = mat2(0.80, -0.60, 0.60, 0.80);
+  for (int i = 0; i < 5; i++) {
+    v += a * noise(p);
+    p = m * p * 2.05;
+    a *= 0.5;
+  }
+  return v;
+}
+
+vec2 hexCenter(float col, float row) {
+  return uOrigin + vec2(col * uGrid.z + mod(row, 2.0) * uGrid.z * 0.5, row * uGrid.w);
+}
+
+// x = solid letter cells, y = faint halo that dissolves outward (no rings, no offset copy)
+vec2 wordMask(vec2 center, float t) {
+  if (uLogo < 0.5) return vec2(0.0);
+  vec2 luv = (center - uSize * 0.5) / max(uLogoBox, vec2(1.0)) + 0.5;
+  if (luv.x < -0.05 || luv.y < -0.05 || luv.x > 1.05 || luv.y > 1.05) return vec2(0.0);
+  vec2 cuv = clamp(luv, 0.0, 1.0);
+  float n = noise(center * 0.045 + vec2(t * 0.35, -t * 0.28));
+  float n2 = noise(center * 0.12 - vec2(t * 0.5, t * 0.42));
+  float core = smoothstep(0.42, 0.62, texture(tLogo, cuv).r + (n - 0.5) * 0.1);
+  float soft = textureLod(tLogo, cuv, 4.0).r;
+  float wide = textureLod(tLogo, cuv, 6.0).r;
+  float halo = clamp(soft * 1.1 + wide * 1.4, 0.0, 1.0);
+  float grain = smoothstep(0.3, 0.85, n2 * 0.6 + n * 0.4);
+  halo *= (0.5 + 0.5 * grain) * (1.0 - core);
+  return vec2(core, halo);
+}
+
+void main() {
+  vec2 cell = floor(gl_FragCoord.xy);
+  float row = uGrid.y - 1.0 - cell.y;
+  vec2 center = hexCenter(cell.x, row);
+  float v = clamp(center.y / uSize.y, 0.0, 1.0);
+
+  vec2 flow = vec2(0.0);
+  float ink = 0.0;
+  if (uFluid > 0.5) {
+    vec2 fluidUv = clamp(vec2(center.x / uSize.x, 1.0 - center.y / uSize.y), 0.0, 1.0);
+    flow = texture(tVelocity, fluidUv).xy * uFluidTexel * uSize;
+    ink = texture(tInk, fluidUv).x;
+  }
+
+  float horizon = mix(8.0, 0.5, uPerspective);
+  float depth = (1.0 + horizon) / (v + horizon);
+  vec2 world = vec2((center.x - uSize.x * 0.5) / uSize.y * depth, (depth - 1.0) * horizon * 2.2);
+  world -= flow * 0.00018 * depth;
+  world /= max(uScale, 0.05);
+
+  float t = uTime;
+  vec2 drift = vec2(
+    fbm(world * 0.20 + vec2(t * 0.38, -t * 0.29)) - 0.5,
+    fbm(world * 0.20 + vec2(3.1, 7.7) + vec2(-t * 0.33, t * 0.42)) - 0.5
+  );
+  vec2 swirl = vec2(
+    fbm(world.yx * 0.32 + t * 0.22) - 0.5,
+    fbm(world.xy * 0.32 - t * 0.24 + 2.4) - 0.5
+  );
+  vec2 q = world + drift * 2.4 + swirl * (1.0 + uChop * 0.4);
+
+  float n1 = fbm(q * 0.48 + t * 0.28);
+  float n2 = fbm(q * 0.95 - t * 0.33 + vec2(9.2, -4.1));
+  float n3 = fbm(q * 1.7 + vec2(n1, n2) * 0.7 + t * 0.40);
+  float height = (n1 * 1.25 + n2 * 0.8 + n3 * (0.4 + uChop * 0.45)) / (2.45 + uChop * 0.45);
+  // Stretch midtones so trough / crest stay readable after contrast
+  float level = clamp(smoothstep(0.08, 0.92, height) * 1.08, 0.0, 1.0);
+  float crest = smoothstep(0.52, 1.0, level);
+  float glint = crest * crest * max(uGlint, 0.22);
+
+  float haze = mix(1.0, 1.0 - uFog * 0.75, pow(1.0 - v, 1.25));
+  // Floor + shaped contrast: waves stay visible, crests still punchy
+  float shaped = pow(level, mix(1.15, uContrast, 0.72));
+  float light = (0.14 + 0.86 * shaped + glint * 0.55) * haze;
+  float glow = 1.0 - exp(-max(ink, 0.0) * uInk * 1.6);
+  light = 1.0 - (1.0 - clamp(light, 0.0, 1.0)) * (1.0 - glow);
+  light = max(light, 0.1);
+
+  // No top-to-bottom intro wipe when uIntro is already 1.
+  float reveal = 1.0;
+  float sweep = 0.0;
+  if (uIntro < 0.999) {
+    float front = uIntro * 1.35;
+    reveal = 1.0 - smoothstep(front - 0.35, front, v);
+    sweep = exp(-pow((v - front + 0.22) / 0.07, 2.0)) * (1.0 - uIntro);
+    light = (light + sweep * 0.8) * reveal;
+    light = max(light, 0.045 * reveal);
+  }
+
+  // Bright hex cells that spell the word (mask only — not a drawn logo).
+  vec2 dispCell = vec2(0.0);
+  float scAmt = 0.0;
+  float h1 = hash21(cell + 3.7);
+  if (uScatter > 0.5 && uLogo > 0.5) {
+    vec4 s = texture(tScatter, clamp(vec2(center.x / uSize.x, 1.0 - center.y / uSize.y), 0.0, 1.0));
+    scAmt = clamp(s.z, 0.0, 1.0);
+    float ang = hash21(cell + 17.3) * 6.2832;
+    vec2 jitter = vec2(cos(ang), sin(ang)) * scAmt * uSlat.x * 7.0 * h1;
+    dispCell = vec2(s.x, -s.y) * uSize.y * (0.55 + 0.9 * h1) + jitter;
+  }
+  vec2 wm = wordMask(center - dispCell, t);
+  float keep = 1.0 - (1.0 - smoothstep(scAmt * 0.7 - 0.08, scAmt * 0.7 + 0.08, h1)) * smoothstep(0.02, 0.15, scAmt);
+  wm *= keep;
+  float halo = wm.y * 0.75;
+  light = max(light, wm.x * 0.98);
+  light = 1.0 - (1.0 - clamp(light, 0.0, 1.0)) * (1.0 - halo);
+  float word = max(wm.x, halo * 0.8);
+  float span = mix(1.0 - uStretch, 1.0, level) + glow * 0.3;
+  span = clamp(span, 0.08, 1.0) * mix(0.1, 1.0, reveal);
+  span = mix(span, max(span, 0.92), wm.x);
+  float tint = clamp(smoothstep(0.2, 0.85, level) * 0.9 + crest * 0.35 + glow * 0.85 + sweep, 0.0, 1.0);
+  float lean = clamp(length(flow) > 0.001 ? flow.x / 1400.0 : (drift.x - drift.y) * 0.45, -1.0, 1.0) * uLean * reveal;
+
+  // Hex progress bar under the word. Uses cell centers, so scatter cannot move it.
+  if (uProgress >= 0.0) {
+    float bx = (center.x - (uBar.x - uBar.z)) / max(uBar.z * 2.0, 1.0);
+    float by = abs(center.y - uBar.y) / max(uBar.w, 1.0);
+    if (by < 1.0 && bx > -0.02 && bx < 1.02) {
+      light = max(light, 0.28);
+      word = max(word, 0.22);
+      if (bx < uProgress) {
+        light = max(light, 0.98);
+        word = 1.0;
+        span = max(span, 0.92);
+      }
+      float head = exp(-pow((bx - uProgress) * 28.0, 2.0));
+      head *= step(0.02, uProgress) * (1.0 - step(0.995, uProgress));
+      float flick = 0.6 + 0.4 * noise(vec2(floor(bx * 48.0), t * 5.0));
+      light = max(light, head * flick);
+      word = max(word, head * 0.85);
+      float flash = smoothstep(0.0, 0.06, uOutro) * (1.0 - smoothstep(0.14, 0.28, uOutro));
+      light = max(light, flash);
+      word = max(word, flash);
+    }
+  }
+
+  // Cells fade out on their own clocks. Size stays put so they dim instead of popping.
+  if (uOutro > 0.001) {
+    float n = hash21(cell + 9.1);
+    float fade = smoothstep(n * 0.4, n * 0.4 + 0.6, uOutro);
+    light *= 1.0 - fade;
+    word *= 1.0 - fade;
+  }
+
+  // A stores word amount when word mask is on; otherwise lean as 0.5 ± 0.5
+  float aOut = uLogo > 0.5 ? word : (0.5 + 0.5 * lean);
+  fragColor = vec4(clamp(light, 0.0, 1.0), span, tint, clamp(aOut, 0.0, 1.0));
+}
+`;
+
+      const abe = `#version 300 es
+precision highp float;
+uniform sampler2D tField;
+uniform vec2 uSize;
+uniform float uDpr;
+uniform vec4 uGrid;
+uniform vec2 uOrigin;
+uniform vec2 uSlat;
+uniform float uRound;
+uniform float uTilt;
+uniform vec3 uColor;
+uniform vec3 uGlintColor;
+uniform vec3 uWordColor;
+uniform float uLogo;
+uniform vec4 uBackground;
+out vec4 fragColor;
+
+float sdHexFlat(vec2 p, float r) {
+  const vec3 k = vec3(-0.866025404, 0.5, 0.577350269);
+  p = abs(p);
+  p -= 2.0 * min(dot(k.xy, p), 0.0) * k.xy;
+  p -= vec2(clamp(p.x, -k.z * r, k.z * r), r);
+  return length(p) * sign(p.y);
+}
+
+float sdHexPointy(vec2 p, float outerR) {
+  float apothem = outerR * 0.866025404;
+  return sdHexFlat(p.yx, apothem);
+}
+
+vec2 hexCenter(float col, float row) {
+  return uOrigin + vec2(col * uGrid.z + mod(row, 2.0) * uGrid.z * 0.5, row * uGrid.w);
+}
+
+void main() {
+  vec2 p = vec2(gl_FragCoord.x, uSize.y * uDpr - gl_FragCoord.y) / uDpr;
+  vec2 local = p - uOrigin;
+  float rowApprox = floor(local.y / max(uGrid.w, 0.0001) + 0.5);
+  float rowOff = mod(rowApprox, 2.0) * uGrid.z * 0.5;
+  float colApprox = floor((local.x - rowOff) / max(uGrid.z, 0.0001) + 0.5);
+  vec4 background = vec4(uBackground.rgb * uBackground.a, uBackground.a);
+  vec4 slat = vec4(0.0);
+
+  for (int dy = -1; dy <= 1; dy++) {
+    for (int dx = -1; dx <= 1; dx++) {
+      float ncol = colApprox + float(dx);
+      float nrow = rowApprox + float(dy);
+      if (ncol < 0.0 || nrow < 0.0 || ncol >= uGrid.x || nrow >= uGrid.y) continue;
+      vec4 field = texelFetch(tField, ivec2(int(ncol), int(uGrid.y - 1.0 - nrow)), 0);
+      vec2 center = hexCenter(ncol, nrow);
+      vec2 offset = p - center;
+      float leanA = uLogo > 0.5 ? 0.5 : field.a;
+      float wordAmt = uLogo > 0.5 ? field.a : 0.0;
+      float angle = (leanA - 0.5) * 2.0 * uTilt;
+      float c = cos(angle);
+      float s = sin(angle);
+      vec2 turned = vec2(c * offset.x + s * offset.y, c * offset.y - s * offset.x);
+      float hexR = uSlat.x * field.g * 0.96;
+      float alpha = clamp(0.5 - sdHexPointy(turned, hexR) * uDpr, 0.0, 1.0) * field.r;
+      vec3 rgb = mix(mix(uColor, uGlintColor, field.b), uWordColor, wordAmt);
+      if (alpha > slat.a) slat = vec4(rgb * alpha, alpha);
+    }
+  }
+  fragColor = slat + background * (1.0 - slat.a);
+}
+`;
+
+      // Helper function to create programs
+      function createProg(vs: string, fs: string, label: string) {
+        const v = gl!.createShader(gl!.VERTEX_SHADER)!;
+        gl!.shaderSource(v, vs.trim());
+        gl!.compileShader(v);
+        if (!gl!.getShaderParameter(v, gl!.COMPILE_STATUS)) {
+          console.error(`[SlatOcean] ${label} vertex compile failed:`, gl!.getShaderInfoLog(v));
+        }
+        const f = gl!.createShader(gl!.FRAGMENT_SHADER)!;
+        gl!.shaderSource(f, fs.trim());
+        gl!.compileShader(f);
+        if (!gl!.getShaderParameter(f, gl!.COMPILE_STATUS)) {
+          console.error(`[SlatOcean] ${label} fragment compile failed:`, gl!.getShaderInfoLog(f));
+        }
+        const p = gl!.createProgram()!;
+        gl!.attachShader(p, v);
+        gl!.attachShader(p, f);
+        gl!.linkProgram(p);
+        if (!gl!.getProgramParameter(p, gl!.LINK_STATUS)) {
+          console.error(`[SlatOcean] ${label} program link failed:`, gl!.getProgramInfoLog(p));
+        }
+        return p;
+      }
+
+      const pSplat = createProg(q0e, Z0e, 'splat');
+      const pCurl = createProg(q0e, X0e, 'curl');
+      const pVorticity = createProg(q0e, Q0e, 'vorticity');
+      const pDivergence = createProg(q0e, J0e, 'divergence');
+      const pPressure = createProg(q0e, ebe, 'pressure');
+      const pGradSubtract = createProg(q0e, tbe, 'gradSubtract');
+      const pAdvect = createProg(q0e, nbe, 'advect');
+      const pScale = createProg(q0e, ibe, 'scale');
+      const pScatter = createProg(q0e, sbe, 'scatter');
+      const pField = createProg(OT, rbe, 'field');
+      const pRender = createProg(OT, abe, 'render');
+
+      // Single Fullscreen Triangle (as used by OGL / zV)
+      const triangleBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, triangleBuf);
+      gl.bufferData(
+        gl.ARRAY_BUFFER,
+        new Float32Array([-1, -1, 3, -1, -1, 3]),
+        gl.STATIC_DRAW
+      );
+
+      function drawTriangle(prog: WebGLProgram) {
+        gl!.useProgram(prog);
+        gl!.bindBuffer(gl!.ARRAY_BUFFER, triangleBuf);
+        const posLoc = gl!.getAttribLocation(prog, 'position');
+        if (posLoc !== -1) {
+          gl!.enableVertexAttribArray(posLoc);
+          gl!.vertexAttribPointer(posLoc, 2, gl!.FLOAT, false, 0, 0);
+        }
+        gl!.drawArrays(gl!.TRIANGLES, 0, 3);
+      }
+
+      // Texture & FBO Utilities
+      const hasFloat = !!(
+        gl.getExtension('EXT_color_buffer_float') ||
+        gl.getExtension('EXT_color_buffer_half_float')
+      );
+      const fluidFormat = hasFloat ? gl.RGBA16F : gl.RGBA8;
+      const fluidType = hasFloat ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+
+      // Offscreen text mask: only decides which hex cells light up as the word.
+      let wordTex: WebGLTexture | null = null;
+      let wordAspect = 2.4;
+      function rebuildWordTexture(text: string) {
+        if (wordTex) {
+          gl!.deleteTexture(wordTex);
+          wordTex = null;
+        }
+        if (!text) return;
+        const w = 1536;
+        const h = 512;
+        wordAspect = w / h;
+        const c2 = document.createElement('canvas');
+        c2.width = w;
+        c2.height = h;
+        const ctx = c2.getContext('2d');
+        if (!ctx) return;
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        let size = Math.floor(h * 0.62);
+        ctx.font = `700 ${size}px "Outfit", "Segoe UI", "Helvetica Neue", sans-serif`;
+        const maxW = w * 0.72;
+        while (size > 24 && ctx.measureText(text).width > maxW) {
+          size -= 4;
+          ctx.font = `700 ${size}px "Outfit", "Segoe UI", "Helvetica Neue", sans-serif`;
+        }
+        ctx.fillText(text, w * 0.5, h * 0.52);
+        wordTex = gl!.createTexture();
+        gl!.bindTexture(gl!.TEXTURE_2D, wordTex);
+        gl!.texImage2D(gl!.TEXTURE_2D, 0, gl!.RGBA, gl!.RGBA, gl!.UNSIGNED_BYTE, c2);
+        gl!.generateMipmap(gl!.TEXTURE_2D);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MIN_FILTER, gl!.LINEAR_MIPMAP_LINEAR);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MAG_FILTER, gl!.LINEAR);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_S, gl!.CLAMP_TO_EDGE);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_T, gl!.CLAMP_TO_EDGE);
+      }
+      rebuildWordTexture(props.logoText);
+
+      function createTexFBO(w: number, h: number, internalFormat: number, type: number, minFilter: number, magFilter: number) {
+        const tex = gl!.createTexture()!;
+        gl!.bindTexture(gl!.TEXTURE_2D, tex);
+        gl!.texImage2D(gl!.TEXTURE_2D, 0, internalFormat, w, h, 0, gl!.RGBA, type, null);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MIN_FILTER, minFilter);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_MAG_FILTER, magFilter);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_S, gl!.CLAMP_TO_EDGE);
+        gl!.texParameteri(gl!.TEXTURE_2D, gl!.TEXTURE_WRAP_T, gl!.CLAMP_TO_EDGE);
+
+        const fbo = gl!.createFramebuffer()!;
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, fbo);
+        gl!.framebufferTexture2D(gl!.FRAMEBUFFER, gl!.COLOR_ATTACHMENT0, gl!.TEXTURE_2D, tex, 0);
+
+        return { fbo, tex, w, h };
+      }
+
+      function deleteFBO(obj: { fbo: WebGLFramebuffer; tex: WebGLTexture } | null) {
+        if (!obj) return;
+        gl!.deleteFramebuffer(obj.fbo);
+        gl!.deleteTexture(obj.tex);
+      }
+
+      function createDoubleFBO(w: number, h: number) {
+        let fA = createTexFBO(w, h, fluidFormat, fluidType, gl!.LINEAR, gl!.LINEAR);
+        let fB = createTexFBO(w, h, fluidFormat, fluidType, gl!.LINEAR, gl!.LINEAR);
+        return {
+          read: () => fA,
+          write: () => fB,
+          swap: () => {
+            const tmp = fA;
+            fA = fB;
+            fB = tmp;
+          },
+        };
+      }
+
+      let fluid: {
+        width: number;
+        height: number;
+        velocity: ReturnType<typeof createDoubleFBO>;
+        ink: ReturnType<typeof createDoubleFBO>;
+        pressure: ReturnType<typeof createDoubleFBO>;
+        scatter: ReturnType<typeof createDoubleFBO>;
+        divergence: ReturnType<typeof createTexFBO>;
+        curl: ReturnType<typeof createTexFBO>;
+      } | null = null;
+
+      function destroyFluid() {
+        if (!fluid) return;
+        deleteFBO(fluid.velocity.read());
+        deleteFBO(fluid.velocity.write());
+        deleteFBO(fluid.ink.read());
+        deleteFBO(fluid.ink.write());
+        deleteFBO(fluid.pressure.read());
+        deleteFBO(fluid.pressure.write());
+        deleteFBO(fluid.scatter.read());
+        deleteFBO(fluid.scatter.write());
+        deleteFBO(fluid.divergence);
+        deleteFBO(fluid.curl);
+        fluid = null;
+      }
+
+      let fieldTexFBO: ReturnType<typeof createTexFBO> | null = null;
+
+      let Ze = 1;
+      let kt = 1;
+      let dpr = 1;
+
+      function resizeFluid() {
+        if (!hasFloat || !props.interactive) {
+          destroyFluid();
+          return;
+        }
+        const aspect = Ze / kt;
+        const w = Math.max(8, Math.round(aspect >= 1 ? Np * aspect : Np));
+        const h = Math.max(8, Math.round(aspect >= 1 ? Np : Np / aspect));
+
+        if (fluid && fluid.width === w && fluid.height === h) return;
+        destroyFluid();
+        fluid = {
+          width: w,
+          height: h,
+          velocity: createDoubleFBO(w, h),
+          ink: createDoubleFBO(w, h),
+          pressure: createDoubleFBO(w, h),
+          scatter: createDoubleFBO(w, h),
+          divergence: createTexFBO(w, h, fluidFormat, fluidType, gl!.NEAREST, gl!.NEAREST),
+          curl: createTexFBO(w, h, fluidFormat, fluidType, gl!.NEAREST, gl!.NEAREST),
+        };
+      }
+
+      // Pointer Location & Splat Tracking (1:1 identical to zV)
+      const splatQueue: Array<[number, number, number, number, number | null]> = [];
+      const lastPointer = { x: 0, y: 0, tracked: false };
+      let angleSeed = 0;
+      let activeUntil = 0;
+      let hasFluidActivity = false;
+      let scatterActive = false;
+      let lastScatterAt = 0;
+
+      function syncThemeColors() {
+        if (!props.followTheme) return;
+        const styles = getComputedStyle(container);
+        const themeColor = styles.getPropertyValue('--slat-ocean-color').trim();
+        const themeGlint = styles.getPropertyValue('--slat-ocean-glint').trim();
+        if (themeColor) props.color = iv(themeColor, props.color);
+        if (themeGlint) props.glintColor = iv(themeGlint, props.glintColor);
+      }
+
+      function pl(e: PointerEvent | MouseEvent) {
+        const rect = container.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const w = Math.max(1, rect.width);
+        const h = Math.max(1, rect.height);
+        return {
+          x,
+          y,
+          u: x / w,
+          v: 1.0 - y / h,
+          h,
+          inside: x >= 0 && y >= 0 && x <= w && y <= h,
+        };
+      }
+
+      function ti(u: number, v: number, dx: number, dy: number, seed: number | null) {
+        if (splatQueue.length > 32) splatQueue.shift();
+        splatQueue.push([u, v, dx, dy, seed]);
+        activeUntil = performance.now() + Math.max(1.5, props.trail * 5) * 1000;
+      }
+
+      function onPointerMove(e: PointerEvent | MouseEvent) {
+        const pos = pl(e);
+        if (!fluid || !props.interactive || !pos.inside) {
+          lastPointer.tracked = false;
+          return;
+        }
+        if (lastPointer.tracked && (pos.x !== lastPointer.x || pos.y !== lastPointer.y)) {
+          ti(pos.u, pos.v, (pos.x - lastPointer.x) / pos.h, (lastPointer.y - pos.y) / pos.h, null);
+        }
+        lastPointer.x = pos.x;
+        lastPointer.y = pos.y;
+        lastPointer.tracked = true;
+      }
+
+      function onPointerDown(e: PointerEvent | MouseEvent) {
+        const pos = pl(e);
+        if (!fluid || !props.interactive || !pos.inside) return;
+        angleSeed += 2.39996;
+        ti(pos.u, pos.v, 0, 0, angleSeed);
+      }
+
+      function onPointerOut(e: PointerEvent) {
+        if (!e.relatedTarget) lastPointer.tracked = false;
+      }
+
+      function onBlur() {
+        lastPointer.tracked = false;
+      }
+
+      window.addEventListener('pointermove', onPointerMove, { passive: true });
+      window.addEventListener('pointerdown', onPointerDown, { passive: true });
+      window.addEventListener('pointerout', onPointerOut as any, { passive: true });
+      window.addEventListener('blur', onBlur);
+
+      // Splat execution
+      function splat(target: ReturnType<typeof createDoubleFBO>, point: [number, number], value: [number, number, number], radius: number) {
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, target.write().fbo);
+        gl!.viewport(0, 0, fluid!.width, fluid!.height);
+        gl!.useProgram(pSplat);
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, target.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pSplat, 'uTarget'), 0);
+        gl!.uniform1f(gl!.getUniformLocation(pSplat, 'uAspect'), Ze / kt);
+        gl!.uniform2f(gl!.getUniformLocation(pSplat, 'uPoint'), point[0], point[1]);
+        gl!.uniform3f(gl!.getUniformLocation(pSplat, 'uValue'), value[0], value[1], value[2]);
+        gl!.uniform1f(gl!.getUniformLocation(pSplat, 'uRadius'), radius);
+        gl!.uniform2f(gl!.getUniformLocation(pSplat, 'uTexel'), 1 / fluid!.width, 1 / fluid!.height);
+        drawTriangle(pSplat);
+        target.swap();
+      }
+
+      // Fluid Simulation Step (Function `db`)
+      function db(dt: number) {
+        if (!fluid) return;
+        const uTexel = [1 / fluid.width, 1 / fluid.height];
+
+        // Vorticity
+        if (props.swirl > 0) {
+          gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.curl.fbo);
+          gl!.viewport(0, 0, fluid.width, fluid.height);
+          gl!.useProgram(pCurl);
+          gl!.activeTexture(gl!.TEXTURE0);
+          gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+          gl!.uniform1i(gl!.getUniformLocation(pCurl, 'uVelocity'), 0);
+          gl!.uniform2f(gl!.getUniformLocation(pCurl, 'uTexel'), uTexel[0], uTexel[1]);
+          drawTriangle(pCurl);
+
+          gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.velocity.write().fbo);
+          gl!.useProgram(pVorticity);
+          gl!.activeTexture(gl!.TEXTURE0);
+          gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+          gl!.uniform1i(gl!.getUniformLocation(pVorticity, 'uVelocity'), 0);
+          gl!.activeTexture(gl!.TEXTURE1);
+          gl!.bindTexture(gl!.TEXTURE_2D, fluid.curl.tex);
+          gl!.uniform1i(gl!.getUniformLocation(pVorticity, 'uCurl'), 1);
+          gl!.uniform1f(gl!.getUniformLocation(pVorticity, 'uSwirl'), di(props.swirl, 0, 2) * 40);
+          gl!.uniform1f(gl!.getUniformLocation(pVorticity, 'uDt'), dt);
+          gl!.uniform2f(gl!.getUniformLocation(pVorticity, 'uTexel'), uTexel[0], uTexel[1]);
+          drawTriangle(pVorticity);
+          fluid.velocity.swap();
+        }
+
+        // Divergence
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.divergence.fbo);
+        gl!.viewport(0, 0, fluid.width, fluid.height);
+        gl!.useProgram(pDivergence);
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pDivergence, 'uVelocity'), 0);
+        gl!.uniform2f(gl!.getUniformLocation(pDivergence, 'uTexel'), uTexel[0], uTexel[1]);
+        drawTriangle(pDivergence);
+
+        // Pressure Initial 0.8 Decay
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.pressure.write().fbo);
+        gl!.useProgram(pScale);
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.pressure.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pScale, 'uSource'), 0);
+        gl!.uniform1f(gl!.getUniformLocation(pScale, 'uValue'), 0.8);
+        gl!.uniform2f(gl!.getUniformLocation(pScale, 'uTexel'), uTexel[0], uTexel[1]);
+        drawTriangle(pScale);
+        fluid.pressure.swap();
+
+        // 16 Jacobi Iterations
+        gl!.useProgram(pPressure);
+        gl!.activeTexture(gl!.TEXTURE1);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.divergence.tex);
+        gl!.uniform1i(gl!.getUniformLocation(pPressure, 'uDivergence'), 1);
+        gl!.uniform2f(gl!.getUniformLocation(pPressure, 'uTexel'), uTexel[0], uTexel[1]);
+
+        for (let i = 0; i < Y0e; i++) {
+          gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.pressure.write().fbo);
+          gl!.activeTexture(gl!.TEXTURE0);
+          gl!.bindTexture(gl!.TEXTURE_2D, fluid.pressure.read().tex);
+          gl!.uniform1i(gl!.getUniformLocation(pPressure, 'uPressure'), 0);
+          drawTriangle(pPressure);
+          fluid.pressure.swap();
+        }
+
+        // Subtract Gradient
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.velocity.write().fbo);
+        gl!.useProgram(pGradSubtract);
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.pressure.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pGradSubtract, 'uPressure'), 0);
+        gl!.activeTexture(gl!.TEXTURE1);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pGradSubtract, 'uVelocity'), 1);
+        gl!.uniform2f(gl!.getUniformLocation(pGradSubtract, 'uTexel'), uTexel[0], uTexel[1]);
+        drawTriangle(pGradSubtract);
+        fluid.velocity.swap();
+
+        // Advection
+        const decayBase = 1.0 / di(props.trail, 0.1, 10.0);
+        gl!.useProgram(pAdvect);
+        gl!.uniform1f(gl!.getUniformLocation(pAdvect, 'uDt'), dt);
+        gl!.uniform2f(gl!.getUniformLocation(pAdvect, 'uTexel'), uTexel[0], uTexel[1]);
+
+        // Advect Velocity
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.velocity.write().fbo);
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pAdvect, 'uVelocity'), 0);
+        gl!.activeTexture(gl!.TEXTURE1);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pAdvect, 'uSource'), 1);
+        gl!.uniform1f(gl!.getUniformLocation(pAdvect, 'uFade'), decayBase * 1.4);
+        drawTriangle(pAdvect);
+        fluid.velocity.swap();
+
+        // Advect Ink
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.ink.write().fbo);
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pAdvect, 'uVelocity'), 0);
+        gl!.activeTexture(gl!.TEXTURE1);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid.ink.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pAdvect, 'uSource'), 1);
+        gl!.uniform1f(gl!.getUniformLocation(pAdvect, 'uFade'), decayBase);
+        drawTriangle(pAdvect);
+        fluid.ink.swap();
+      }
+
+      function clearTarget(target: ReturnType<typeof createDoubleFBO>) {
+        if (!fluid) return;
+        gl!.viewport(0, 0, fluid.width, fluid.height);
+        gl!.useProgram(pScale);
+        gl!.uniform1f(gl!.getUniformLocation(pScale, 'uValue'), 0);
+        gl!.uniform2f(gl!.getUniformLocation(pScale, 'uTexel'), 1 / fluid.width, 1 / fluid.height);
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, target.write().fbo);
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, target.read().tex);
+        gl!.uniform1i(gl!.getUniformLocation(pScale, 'uSource'), 0);
+        drawTriangle(pScale);
+        target.swap();
+      }
+
+      function clearFluid() {
+        if (!fluid) return;
+        [fluid.velocity, fluid.ink, fluid.pressure].forEach(clearTarget);
+      }
+
+      // Pointy-top honeycomb (odd-r): vertical sides, tip up/down, odd rows half-shifted
+      function kh() {
+        const diameter = di(props.slatWidth, 1, 64);
+        const radius = diameter * 0.5; // center → vertex
+        const gap = di(props.gap, 0, 64);
+        // Pointy-top: width=√3 R, height=2R; row pitch=1.5R; odd rows +pitchX/2
+        const pitchX = Math.sqrt(3) * radius + gap;
+        const pitchY = 1.5 * radius + gap * (Math.sqrt(3) * 0.5);
+        const cols = Math.min(2048, Math.ceil((Ze + pitchX) / pitchX) + 2);
+        const rows = Math.min(2048, Math.ceil((kt + pitchY) / pitchY) + 2);
+        const contentW = (cols - 1) * pitchX + pitchX * 0.5;
+        const contentH = (rows - 1) * pitchY;
+        const originX = (Ze - contentW) / 2;
+        const originY = (kt - contentH) / 2;
+
+        if (!fieldTexFBO || fieldTexFBO.w !== cols || fieldTexFBO.h !== rows) {
+          deleteFBO(fieldTexFBO);
+          fieldTexFBO = createTexFBO(cols, rows, gl!.RGBA8, gl!.UNSIGNED_BYTE, gl!.NEAREST, gl!.NEAREST);
+        }
+
+        const tilt = Math.min(0.28, Math.asin(di((pitchX * 0.55) / Math.max(radius, 0.001), 0, 1)));
+        return {
+          slatW: radius,
+          slatH: radius,
+          tilt,
+          grid: [cols, rows, pitchX, pitchY],
+          origin: [originX, originY],
+        };
+      }
+
+      let lastFrameTime = performance.now();
+      let accumTime = 0;
+      let introProgress = 0;
+      let animFrameId = 0;
+      let forcePaused = container.dataset.paused === 'true';
+      let offscreen = false;
+      let reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let needsStaticFrame = false;
+
+      function isExternallyPaused() {
+        return forcePaused || container.dataset.paused === 'true';
+      }
+
+      function shouldAnimate() {
+        return !isExternallyPaused() && !offscreen && !document.hidden && !reducedMotion;
+      }
+
+      function scheduleFrame() {
+        if (animFrameId) return;
+        if (!shouldAnimate() && !needsStaticFrame) return;
+        lastFrameTime = performance.now();
+        animFrameId = requestAnimationFrame(renderLoop);
+      }
+
+      function renderLoop(now: number) {
+        animFrameId = 0;
+        const staticOnly = needsStaticFrame && !shouldAnimate();
+        needsStaticFrame = false;
+
+        if (!shouldAnimate() && !staticOnly) return;
+
+        const rawDt = staticOnly
+          ? 0
+          : Math.min(0.05, Math.max(0, (now - lastFrameTime) * 0.001));
+        lastFrameTime = now;
+
+        syncThemeColors();
+
+        accumTime += rawDt * props.speed;
+        if (reducedMotion || staticOnly) {
+          introProgress = 1;
+        } else {
+          introProgress = props.intro
+            ? introProgress + rawDt / Math.max(0.2, props.introDuration)
+            : 1;
+        }
+
+        const tIntro = Math.min(introProgress, 1);
+        const easedIntro =
+          tIntro < 0.5 ? 4 * tIntro * tIntro * tIntro : 1 - Math.pow(-2 * tIntro + 2, 3) / 2;
+
+        // Process pointer splats
+        if (!staticOnly && fluid && splatQueue.length > 0) {
+          const radius = Math.pow(di(props.cursorSize, 4, 600) / kt, 2) * 0.35;
+          const aspect = Ze / kt;
+          for (const [u, v, dx, dy, seed] of splatQueue) {
+            if (seed === null) {
+              splat(fluid.velocity, [u, v], [dx * nv, dy * nv, 0], radius);
+              splat(fluid.ink, [u, v], [0.13, 0, 0], radius);
+              if (wordTex) {
+                const moved = Math.hypot(dx, dy);
+                splat(fluid.scatter, [u, v], [dx * 4, dy * 4, Math.min(0.5, moved * 25)], radius * 1.6);
+                lastScatterAt = now;
+                scatterActive = true;
+              }
+              continue;
+            }
+            if (wordTex) {
+              const ringR = Math.sqrt(radius) * 1.2;
+              for (let i = 0; i < 6; i++) {
+                const ang = seed + (i / 6) * Math.PI * 2;
+                const cosA = Math.cos(ang);
+                const sinA = Math.sin(ang);
+                splat(fluid.scatter, [u + (cosA * ringR) / aspect, v + sinA * ringR], [cosA * 0.05, sinA * 0.05, 0.6], radius * 1.2);
+              }
+              lastScatterAt = now;
+              scatterActive = true;
+            }
+            const burstRadius = radius * 0.55;
+            const burstDist = Math.sqrt(burstRadius * 0.5) * 1.9;
+            const burstForce = nv * 0.08;
+            for (let i = 0; i < _T; i++) {
+              const ang = seed + (i / _T) * Math.PI * 2;
+              const cosA = Math.cos(ang);
+              const sinA = Math.sin(ang);
+              const pt: [number, number] = [u + (cosA * burstDist) / aspect, v + sinA * burstDist];
+              const vel: [number, number, number] = [
+                (cosA - sinA) * Math.SQRT1_2 * burstForce,
+                (sinA + cosA) * Math.SQRT1_2 * burstForce,
+                0,
+              ];
+              splat(fluid.velocity, pt, vel, burstRadius);
+              splat(fluid.ink, pt, [0.75, 0, 0], burstRadius);
+            }
+            splat(fluid.ink, [u, v], [0.45, 0, 0], radius);
+          }
+          splatQueue.length = 0;
+          hasFluidActivity = true;
+        }
+
+        const isFluidActive = fluid !== null && now < activeUntil;
+        if (fluid) {
+          if (isFluidActive) {
+            db(Math.min(Math.max(rawDt, 1 / 240), 1 / 30));
+          } else if (hasFluidActivity) {
+            clearFluid();
+            hasFluidActivity = false;
+          }
+          if (scatterActive && !staticOnly) {
+            const idle = now - lastScatterAt;
+            if (idle > 8000) {
+              clearTarget(fluid.scatter);
+              scatterActive = false;
+            } else {
+              const sdt = Math.min(Math.max(rawDt, 1 / 240), 1 / 30);
+              gl!.bindFramebuffer(gl!.FRAMEBUFFER, fluid.scatter.write().fbo);
+              gl!.viewport(0, 0, fluid.width, fluid.height);
+              gl!.useProgram(pScatter);
+              gl!.activeTexture(gl!.TEXTURE0);
+              gl!.bindTexture(gl!.TEXTURE_2D, fluid.velocity.read().tex);
+              gl!.uniform1i(gl!.getUniformLocation(pScatter, 'uVelocity'), 0);
+              gl!.activeTexture(gl!.TEXTURE1);
+              gl!.bindTexture(gl!.TEXTURE_2D, fluid.scatter.read().tex);
+              gl!.uniform1i(gl!.getUniformLocation(pScatter, 'uSource'), 1);
+              gl!.uniform2f(gl!.getUniformLocation(pScatter, 'uTexel'), 1 / fluid.width, 1 / fluid.height);
+              gl!.uniform1f(gl!.getUniformLocation(pScatter, 'uDt'), sdt);
+              // Hold scattered briefly, then reassemble
+              gl!.uniform1f(gl!.getUniformLocation(pScatter, 'uDecay'), idle < 200 ? 0.5 : 5.0);
+              drawTriangle(pScatter);
+              fluid.scatter.swap();
+            }
+          }
+        }
+
+        const gridInfo = kh();
+
+        // 1. Field Shader Pass
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, fieldTexFBO!.fbo);
+        gl!.viewport(0, 0, gridInfo.grid[0], gridInfo.grid[1]);
+        gl!.useProgram(pField);
+
+        gl!.uniform2f(gl!.getUniformLocation(pField, 'uSize'), Ze, kt);
+        gl!.uniform4f(gl!.getUniformLocation(pField, 'uGrid'), gridInfo.grid[0], gridInfo.grid[1], gridInfo.grid[2], gridInfo.grid[3]);
+        gl!.uniform2f(gl!.getUniformLocation(pField, 'uOrigin'), gridInfo.origin[0], gridInfo.origin[1]);
+        gl!.uniform2f(gl!.getUniformLocation(pField, 'uSlat'), gridInfo.slatW, gridInfo.slatH);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uTime'), accumTime);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uScale'), props.scale);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uDirection'), (props.direction * Math.PI) / 180);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uChop'), di(props.chop, 0, 1.5));
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uStretch'), di(props.stretch, 0, 0.95));
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uGlint'), Math.max(0, props.glint));
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uContrast'), di(props.contrast, 0.2, 4));
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uPerspective'), di(props.perspective, 0, 1));
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uFog'), di(props.fog, 0, 1));
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uIntro'), easedIntro);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uFluid'), isFluidActive ? 1 : 0);
+
+        const wordOn = !!(props.logoText && wordTex);
+
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid ? fluid.velocity.read().tex : null);
+        gl!.uniform1i(gl!.getUniformLocation(pField, 'tVelocity'), 0);
+
+        gl!.activeTexture(gl!.TEXTURE1);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid ? fluid.ink.read().tex : null);
+        gl!.uniform1i(gl!.getUniformLocation(pField, 'tInk'), 1);
+
+        gl!.activeTexture(gl!.TEXTURE2);
+        gl!.bindTexture(gl!.TEXTURE_2D, wordTex);
+        gl!.uniform1i(gl!.getUniformLocation(pField, 'tLogo'), 2);
+
+        gl!.activeTexture(gl!.TEXTURE3);
+        gl!.bindTexture(gl!.TEXTURE_2D, fluid ? fluid.scatter.read().tex : null);
+        gl!.uniform1i(gl!.getUniformLocation(pField, 'tScatter'), 3);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uScatter'), fluid && scatterActive ? 1 : 0);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uLogo'), wordOn ? 1 : 0);
+        const wordBoxW = Math.min(Ze * 1.05, kt * 2.4) * props.logoScale;
+        const wordBoxH = wordBoxW / wordAspect;
+        gl!.uniform2f(gl!.getUniformLocation(pField, 'uLogoBox'), wordBoxW, wordBoxH);
+        const barW = wordBoxW * props.barWidth;
+        const barY = kt * 0.5 + wordBoxH * 0.28 + gridInfo.grid[3] * 2.5;
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uProgress'), props.progress);
+        gl!.uniform4f(
+          gl!.getUniformLocation(pField, 'uBar'),
+          Ze * 0.5,
+          barY,
+          barW * 0.5,
+          gridInfo.grid[3] * 1.15
+        );
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uOutro'), props.outro);
+
+        gl!.uniform2f(gl!.getUniformLocation(pField, 'uFluidTexel'), fluid ? 1 / fluid.width : 1, fluid ? 1 / fluid.height : 1);
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uInk'), di(props.cursorStrength, 0, 3));
+        gl!.uniform1f(gl!.getUniformLocation(pField, 'uLean'), di(props.lean, 0, 1));
+
+        drawTriangle(pField);
+
+        // 2. Render Shader Pass (To Screen)
+        gl!.bindFramebuffer(gl!.FRAMEBUFFER, null);
+        gl!.viewport(0, 0, canvas.width, canvas.height);
+        gl!.useProgram(pRender);
+
+        gl!.activeTexture(gl!.TEXTURE0);
+        gl!.bindTexture(gl!.TEXTURE_2D, fieldTexFBO!.tex);
+        gl!.uniform1i(gl!.getUniformLocation(pRender, 'tField'), 0);
+
+        gl!.uniform2f(gl!.getUniformLocation(pRender, 'uSize'), Ze, kt);
+        gl!.uniform1f(gl!.getUniformLocation(pRender, 'uDpr'), dpr);
+        gl!.uniform4f(gl!.getUniformLocation(pRender, 'uGrid'), gridInfo.grid[0], gridInfo.grid[1], gridInfo.grid[2], gridInfo.grid[3]);
+        gl!.uniform2f(gl!.getUniformLocation(pRender, 'uOrigin'), gridInfo.origin[0], gridInfo.origin[1]);
+        gl!.uniform2f(gl!.getUniformLocation(pRender, 'uSlat'), gridInfo.slatW, gridInfo.slatH);
+        gl!.uniform1f(gl!.getUniformLocation(pRender, 'uRound'), di(props.roundness, 0, 1));
+        gl!.uniform1f(gl!.getUniformLocation(pRender, 'uTilt'), !wordOn && isFluidActive && props.lean > 0 ? gridInfo.tilt : 0);
+        gl!.uniform1f(gl!.getUniformLocation(pRender, 'uLogo'), wordOn ? 1 : 0);
+        gl!.uniform3f(gl!.getUniformLocation(pRender, 'uColor'), props.color[0], props.color[1], props.color[2]);
+        gl!.uniform3f(gl!.getUniformLocation(pRender, 'uGlintColor'), props.glintColor[0], props.glintColor[1], props.glintColor[2]);
+        gl!.uniform3f(gl!.getUniformLocation(pRender, 'uWordColor'), props.logoColor[0], props.logoColor[1], props.logoColor[2]);
+        gl!.uniform4f(gl!.getUniformLocation(pRender, 'uBackground'), props.backgroundColor[0], props.backgroundColor[1], props.backgroundColor[2], props.backgroundColor[3]);
+
+        drawTriangle(pRender);
+
+        if (shouldAnimate()) scheduleFrame();
+      }
+
+      function resize() {
+        Ze = Math.max(1, container.clientWidth);
+        kt = Math.max(1, container.clientHeight);
+        dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(W0e / (Ze * kt)));
+
+        const targetW = Math.round(Ze * dpr);
+        const targetH = Math.round(kt * dpr);
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
+
+        resizeFluid();
+        if (!shouldAnimate()) {
+          needsStaticFrame = true;
+          scheduleFrame();
+        }
+      }
+
+      const resizeObserver = new ResizeObserver(resize);
+      resizeObserver.observe(container);
+      resize();
+      syncThemeColors();
+
+      const intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          offscreen = !entries.some((entry) => entry.isIntersecting);
+          if (shouldAnimate()) scheduleFrame();
+          else if (!offscreen) {
+            needsStaticFrame = true;
+            scheduleFrame();
+          }
+        },
+        { root: null, threshold: 0.01 }
+      );
+      intersectionObserver.observe(container);
+
+      const onVisibility = () => {
+        if (shouldAnimate()) scheduleFrame();
+      };
+      document.addEventListener('visibilitychange', onVisibility);
+
+      const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const onMotionChange = (event: MediaQueryListEvent | MediaQueryList) => {
+        reducedMotion = event.matches;
+        if (reducedMotion) {
+          needsStaticFrame = true;
+          scheduleFrame();
+        } else {
+          scheduleFrame();
+        }
+      };
+      if (typeof motionQuery.addEventListener === 'function') {
+        motionQuery.addEventListener('change', onMotionChange);
+      } else {
+        motionQuery.addListener(onMotionChange as any);
+      }
+
+      const themeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const onThemeChange = () => {
+        syncThemeColors();
+        needsStaticFrame = true;
+        scheduleFrame();
+      };
+      if (typeof themeQuery.addEventListener === 'function') {
+        themeQuery.addEventListener('change', onThemeChange);
+      } else {
+        themeQuery.addListener(onThemeChange as any);
+      }
+
+      const pauseObserver = new MutationObserver(() => {
+        forcePaused = container.dataset.paused === 'true';
+        if (shouldAnimate()) scheduleFrame();
+        else {
+          needsStaticFrame = true;
+          scheduleFrame();
+        }
+      });
+      pauseObserver.observe(container, { attributes: true, attributeFilter: ['data-paused'] });
+
+      // Trigger initial disturbance
+      setTimeout(() => {
+        if (props.interactive && !reducedMotion) ti(0.5, 0.5, 0.08, -0.04, null);
+      }, 50);
+
+      if (reducedMotion) {
+        needsStaticFrame = true;
+      }
+      scheduleFrame();
+
+      // Live control surface for loading-screen debug panel (and tests).
+      (canvas as any)._zV = {
+        props,
+        apply(partial: Record<string, unknown>) {
+          const next = { ...partial };
+          if (typeof next.color === 'string') next.color = iv(next.color, props.color);
+          if (typeof next.glintColor === 'string') next.glintColor = iv(next.glintColor, props.glintColor);
+          if (typeof next.backgroundColor === 'string') {
+            next.backgroundColor = iv(next.backgroundColor, props.backgroundColor);
+          }
+          if (typeof next.preset === 'string' && BT[next.preset as string]) {
+            const base = BT[next.preset as string];
+            Object.assign(props, {
+              scale: base.scale,
+              speed: base.speed,
+              direction: base.direction,
+              chop: base.chop,
+              stretch: base.stretch,
+              glint: base.glint,
+              contrast: base.contrast,
+              perspective: base.perspective,
+              fog: base.fog,
+            });
+            props.preset = next.preset as string;
+            delete next.preset;
+          }
+          Object.assign(props, next);
+          if ('interactive' in partial) resizeFluid();
+          if ('followTheme' in partial) {
+            container.dataset.followTheme = props.followTheme ? 'true' : 'false';
+            syncThemeColors();
+          }
+          needsStaticFrame = true;
+          scheduleFrame();
+          return { ...props };
+        },
+        getSnapshot() {
+          return { ...props };
+        },
+      };
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSlatOceanExact);
+  } else {
+    initSlatOceanExact();
+  }
+</script>

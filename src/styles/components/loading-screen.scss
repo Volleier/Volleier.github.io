@@ -51,6 +51,7 @@
     &::before { opacity: 0; }
     .serif { opacity: 0; transition: opacity 0.4s ease; }
     .loading-watermark { opacity: 0; transition: opacity 0.4s ease; }
+    .slat-ocean-container { opacity: 0; transition: opacity 0.5s ease; }
     .name-tech-card {
       transform: translateY(-20px) scale(0.96);
       opacity: 0;
@@ -406,6 +407,23 @@
 @keyframes pulseDot {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* Hex loading focus: hide legacy chrome, keep only honeycomb canvas */
+.loading-overlay--hex-only {
+  &::before,
+  .serif,
+  .loading-watermark,
+  .name-block-outer,
+  .status-bar-container {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+
+  &::after {
+    background: radial-gradient(circle at center, transparent 35%, rgba(0, 0, 0, 0.55) 140%);
+  }
 }
 
 
