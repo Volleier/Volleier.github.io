@@ -1,0 +1,51 @@
+.sd-page {
+  position: fixed;
+  inset: 0;
+  background: #050607;
+  color: #fff;
+  font-family: 'Consolas', 'Courier New', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-nav-top {
+  position: absolute;
+  top: 28px;
+  left: 40px;
+  z-index: 20;
+  .return-link {
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    letter-spacing: 0.12em;
+    font-size: 0.85rem;
+    &:hover { color: #00ffcc; }
+  }
+}
+
+.sd-center {
+  text-align: center;
+  max-width: 720px;
+  padding: 40px;
+}
+
+.sd-kicker {
+  color: #00ffcc;
+  letter-spacing: 0.28em;
+  font-size: 0.75rem;
+  margin-bottom: 16px;
+}
+
+.sd-title {
+  font-size: 3.5rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.sd-note {
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.18em;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
