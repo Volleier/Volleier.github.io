@@ -1,0 +1,41 @@
+---
+interface Props {
+  src: string;
+  alt?: string;
+  class?: string;
+}
+const { src, alt = '', class: className = '' } = Astro.props;
+---
+
+<div class={`emerge-reveal ${className}`.trim()} data-emerge-src={src}>
+  <canvas class="emerge-reveal__canvas" aria-hidden="true"></canvas>
+  <img class="emerge-reveal__fallback" src={src} alt={alt} decoding="async" />
+</div>
+
+<style>
+  .emerge-reveal {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #050607;
+  }
+  .emerge-reveal__canvas,
+  .emerge-reveal__fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .emerge-reveal__fallback {
+    object-fit: cover;
+  }
+  .emerge-reveal.is-gl .emerge-reveal__fallback {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .emerge-reveal.is-gl .emerge-reveal__canvas {
+    z-index: 1;
+  }
+</style>
