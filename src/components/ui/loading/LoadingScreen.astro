@@ -3,15 +3,12 @@ import GildedEffect from '../effects/GildedEffect.astro';
 import SlatOceanEffect from '../effects/SlatOceanEffect.astro';
 import '../../../styles/components/loading-screen.scss';
 
-// Temporary pin so hex loading can be reviewed; set false for normal load → home.
-const PIN_HEX_LOADING = true;
+const PIN_HEX_LOADING = false;
 ---
 
-{PIN_HEX_LOADING && (
-  <style is:inline>
-    #loading-screen { display: block !important; opacity: 1 !important; visibility: visible !important; }
-  </style>
-)}
+<style is:inline>
+  html[data-skip-loading-screen="true"] #loading-screen { display: none !important; }
+</style>
 
 <div
   id="loading-screen"
@@ -262,6 +259,7 @@ const PIN_HEX_LOADING = true;
     if (!loadingScreen) return;
 
     if (document.documentElement.dataset.skipLoadingScreen === 'true') {
+      loadingScreen.style.display = 'none';
       document.dispatchEvent(new CustomEvent('LoadingSequenceMorph'));
       document.dispatchEvent(new CustomEvent('LoadingScreenComplete'));
       return;

@@ -60,8 +60,14 @@ import LoadingScreen from '../components/ui/loading/LoadingScreen.astro';
     {showLoading && (
       <script is:inline>
         (() => {
-          // Debug mode: never skip loading screen
-          document.documentElement.dataset.skipLoadingScreen = 'false';
+          const key = 'volleier:loading-screen-seen';
+          try {
+            if (window.localStorage.getItem(key) === '1') {
+              document.documentElement.dataset.skipLoadingScreen = 'true';
+            } else {
+              window.localStorage.setItem(key, '1');
+            }
+          } catch {}
         })();
       </script>
     )}
