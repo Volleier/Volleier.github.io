@@ -1,0 +1,56 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import EmergeReveal from '../../components/ui/effects/EmergeReveal.astro';
+import { games } from '../../data/games';
+import '../../styles/components/pages/game-gallery.scss';
+---
+
+<BaseLayout title="Games - Volleier" showNav={false} showFooter={false} showLoading={false}>
+  <div class="gg-page">
+    <div class="gg-nav-top">
+      <a href="/" class="return-link"><span class="lnr">←</span> SYS.RETURN_ROOT</a>
+    </div>
+    <header class="gg-header">
+      <div class="gg-kicker">CMD_02 // GAMES</div>
+      <div class="gg-sub">Select unit · horizontal archive</div>
+    </header>
+
+    <div class="gg-track-wrap">
+      <div class="gg-track" data-gg-track>
+        {games.map((g) => (
+          <a class="gg-card" href={g.href} data-gg-card>
+            <div class="gg-card__frame">
+              <EmergeReveal src={g.cover} alt={g.title} />
+            </div>
+            <div class="gg-card__meta">
+              <span class="gg-card__tag">{g.tag}</span>
+              <span class="gg-card__title">{g.title}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  import { createEmergeReveal } from '../../scripts/emerge-reveal';
+
+  const roots = Array.from(document.querySelectorAll<HTMLElement>('[data-emerge-src]'));
+  const handles = [];
+
+  for (const root of roots) {
+    const src = root.dataset.emergeSrc;
+    const canvas = root.querySelector<HTMLCanvasElement>('.emerge-reveal__canvas');
+    if (!src || !canvas) continue;
+    const handle = await createEmergeReveal({ canvas, src });
+    if (handle) {
+      root.classList.add('is-gl');
+      handles.push(handle);
+    }
+  }
+
+  for (const handle of handles) {
+    await handle.play();
+  }
+</script>
