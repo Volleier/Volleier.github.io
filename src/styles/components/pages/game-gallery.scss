@@ -55,9 +55,9 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 48px;
+  gap: 40px;
   height: 100%;
-  padding: 0 80px;
+  padding: 0 64px;
   width: max-content;
   min-width: 100%;
 }
@@ -66,10 +66,20 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: min(720px, 70vw);
+  /* Two cards + gap + padding fit a typical desktop without clipping the first. */
+  width: min(560px, calc((100vw - 168px) / 2));
   text-decoration: none;
   color: inherit;
   flex: 0 0 auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.gg-card.is-active,
+.gg-card.is-done {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .gg-card__frame {
@@ -84,6 +94,15 @@
   align-items: baseline;
   gap: 12px;
   padding: 0 4px;
+  opacity: 0;
+  transform: translateX(-16px);
+  transition: opacity 0.45s ease, transform 0.45s ease;
+}
+
+.gg-card.is-active .gg-card__meta,
+.gg-card.is-done .gg-card__meta {
+  opacity: 1;
+  transform: none;
 }
 
 .gg-card__tag {

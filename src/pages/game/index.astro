@@ -36,21 +36,33 @@ import '../../styles/components/pages/game-gallery.scss';
 <script>
   import { createEmergeReveal } from '../../scripts/emerge-reveal';
 
-  const roots = Array.from(document.querySelectorAll<HTMLElement>('[data-emerge-src]'));
-  const handles = [];
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-gg-card]'));
+  type CardReveal = {
+    card: HTMLElement;
+    root: HTMLElement;
+    handle: Awaited<ReturnType<typeof createEmergeReveal>>;
+  };
+  const queue: CardReveal[] = [];
 
-  for (const root of roots) {
-    const src = root.dataset.emergeSrc;
-    const canvas = root.querySelector<HTMLCanvasElement>('.emerge-reveal__canvas');
-    if (!src || !canvas) continue;
+  for (const card of cards) {
+    const root = card.querySelector<HTMLElement>('[data-emerge-src]');
+    const canvas = root?.querySelector<HTMLCanvasElement>('.emerge-reveal__canvas');
+    const src = root?.dataset.emergeSrc;
+    if (!root || !canvas || !src) continue;
     const handle = await createEmergeReveal({ canvas, src });
     if (handle) {
+      // Hide static cover so waiting cards stay empty until their L→R turn.
       root.classList.add('is-gl');
-      handles.push(handle);
+      handle.setProgress(0);
+      queue.push({ card, root, handle });
     }
   }
 
-  for (const handle of handles) {
+  for (const { card, handle } of queue) {
+    card.classList.add('is-active');
+    card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
     await handle.play();
+    card.classList.remove('is-active');
+    card.classList.add('is-done');
   }
 </script>
