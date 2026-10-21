@@ -85,12 +85,10 @@ function buildFs(hasDerivatives: boolean): string {
                 vec2 st = gl_FragCoord.xy / u_res;
                 float uAspect = u_res.x / u_res.y;
 
-                // Distance from centre: superellipse following the viewport, 1.0 at the corners.
-                vec2 q = abs(st - 0.5) * 2.0;
-                vec2 q2 = q * q;
-                float d = pow(dot(q2, q2), 0.25) * 0.8408964;
+                // Left-to-right sweep distance (Codrops emerge axis).
+                float d = st.x;
 
-                // Front overshoots the corners so the trailing cyan rim fully leaves the frame.
+                // Front overshoots the right edge so the trailing cyan rim fully leaves the frame.
                 const float rimWidth = 0.035;
                 const float rimSoft = 0.025;
                 float front = cubicOut(map(u_progress, 0.0, 0.35, 0.0, 1.0)) * (1.0 + rimWidth + rimSoft);
@@ -104,8 +102,8 @@ function buildFs(hasDerivatives: boolean): string {
                 pixelateProgress = floor(pixelateProgress * 12.0) / 12.0;
                 float s = floor(mix(11.0, 50.0, quadraticOut(pixelateProgress)));
                 vec2 gridSize = vec2(s, floor(s / uAspect));
-                vec2 gridUv = (st - 0.5) * gridSize + 0.5;
-                vec2 cellUv = floor(gridUv) / gridSize + 0.5;
+                vec2 gridUv = st * gridSize;
+                vec2 cellUv = (floor(gridUv) + 0.5) / gridSize;
                 vec3 color = scene(cellUv);
                 vec3 defaultColor = scene(st);
                 float finalProgress = map(u_progress, 0.75, 1.0, 0.0, 1.0);
